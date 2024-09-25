@@ -1,2 +1,2 @@
-print(3Deze code komt van Github, test")
-print(Import gelukt")
+print("Deze code komt van Github, test")
+print("Import gelukt")
