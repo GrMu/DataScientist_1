@@ -8,11 +8,13 @@ Zorg ervoor dat een rij verwijderd kan worden
 Maak een functie sorteren op naam en sorteren op leeftijd
 """
 from tabulate import tabulate
-Personeel = {7:{"Naam":"Bert", "Leeftijd":20, "Woonplaats":"Genk", "Functie":"Operator", "Afdeling":"Centraal"},
-             2:{"Naam":"Bart", "Leeftijd":33, "Woonplaats":"Gent", "Functie":"Chef", "Afdeling":"Centraal"},
-             3:{"Naam":"Berend", "Leeftijd": 26, "Woonplaats": "Bilzen", "Functie": "Technieker", "Afdeling": "Centraal"},
-             10:{"Naam":"Bern", "Leeftijd":30, "Woonplaats":"Alken", "Functie":"Operator", "Afdeling":"Centraal"},
-             5:{"Naam":"Berend", "Leeftijd":20, "Woonplaats":"Genk", "Functie":"Operator", "Afdeling":"Centraal"}
+import re
+
+Personeel = {"P7":{"Naam":"Bert", "Leeftijd":20, "Woonplaats":"Genk", "Functie":"Operator", "Afdeling":"Centraal"},
+             "P2":{"Naam":"Bart", "Leeftijd":33, "Woonplaats":"Gent", "Functie":"Chef", "Afdeling":"Centraal"},
+             "P3":{"Naam":"Berend", "Leeftijd": 26, "Woonplaats": "Bilzen", "Functie": "Technieker", "Afdeling": "Centraal"},
+             "P10":{"Naam":"Bern", "Leeftijd":30, "Woonplaats":"Alken", "Functie":"Operator", "Afdeling":"Centraal"},
+             "P5":{"Naam":"Berend", "Leeftijd":20, "Woonplaats":"Genk", "Functie":"Operator", "Afdeling":"Centraal"}
              }
 print(Personeel)
 
@@ -36,21 +38,23 @@ def tabelopmaak(Personeel):
         Persoonsgegevens_matrix.append(Persoonsgegevens_vector)
     print(tabulate(Persoonsgegevens_matrix, headers=Header, tablefmt="fancy_grid"))
 
-    """
-    # Deze constructie werkt niet:
-    for Persoon in Personeel:
-        print(type(Persoon))
-        Persoonsgegevens_vector.append(Persoon)
-        for value in Persoon.values():
-            Persoonsgegevens_vector.append(value)
-        print(Persoonsgegevens_vector)
-    """
-
 # Voeg een rij toe
 def voeg_rij_toe(Personeel):
-    IDs = [id for id in Personeel]
-    IDs.sort()
-    nieuwe_ID = IDs[-1]+1
+    # De ID-string bevat een getal. Deze eerst eruit halen en sorteren om hoogste nummer te vinden. Ook de prefix eruitvissen (voor zover aanwezig).
+    IDs_str = [id for id in Personeel]
+    for i in IDs_str[0]:
+        if i.isdigit():
+            break
+    indx = IDs_str[0].index(i)
+    Prefix = IDs_str[0][:indx]
+    IDs_int = []
+    for item in IDs_str:
+        getal_vector = re.findall(r'\d+', item)
+        [IDs_int.append(int(getal_vector[0]))]
+    print(IDs_int)
+    IDs_int.sort()
+    print(IDs_int)
+    nieuwe_ID = Prefix+str(int(IDs_int[-1])+1)
     Personeel.update({nieuwe_ID:{"Naam":"Barend", "Leeftijd":18, "Woonplaats":"Stokkem", "Functie":"Operator", "Afdeling":"Decentraal"}})
     # print(Personeel)
 
@@ -63,13 +67,8 @@ def verwijder_rij(Personeel, rij_id):
 
 # Sorteren op een key zoals naam en leeftijd
 def sorteer_2D_dict(Personeel, Key):
-    print(Personeel[0][Key])
-    # print(Personeel)
-
-# Sorteren op een key zoals naam en leeftijd
-def sorteer_2D_dict(Personeel, Key):
-    gesorteerde_dict = dict(sorted(Personeel.items(), key=lambda item: item[1][Key]))
-    # print(gesorteerde_dict)
+    gesorteerde_dict = dict(sorted(Personeel.items(), key=lambda item: item[1][Key])) #dict wordt omgezet naar list. Tweede lijn nodig.
+    print(gesorteerde_dict)
     return gesorteerde_dict
 
 def sorteer_2D_dict_op_index(Personeel):
@@ -83,7 +82,6 @@ verwijder_rij(Personeel,3)
 tabelopmaak(Personeel)
 gesorteerde_dict2=sorteer_2D_dict(Personeel, "Naam")
 tabelopmaak(gesorteerde_dict2)
-print(gesorteerde_dict2)
 gesorteerde_dict3=sorteer_2D_dict(gesorteerde_dict2, "Leeftijd")
 tabelopmaak(gesorteerde_dict3)
 gesorteerde_dict4=sorteer_2D_dict_op_index(gesorteerde_dict3)
