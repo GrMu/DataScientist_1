@@ -28,6 +28,13 @@ data = [[1, "A"], [2, "B"], [3, "C"], [4, "D"]]
 # wb = Workbook()
 wb = openpyxl.load_workbook(Excelbestand)
 ws = wb.active
-max_row = openpyxl
+max_row = ws.max_row
+max_col = ws.max_column
+print("max_row: ", max_row, ", max_col: ", max_col)
 # max_row = sheet.max_row
-rij = ["Bentje", ]
+data = []
+for rij in range(max_row-1)
+    data.
+rij = ["Bentje", 2300 ]
+ws.append(rij)
+wb.save(Excelbestand)
