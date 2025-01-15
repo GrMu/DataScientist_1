@@ -2,12 +2,18 @@
 # Basisbestand: teambuilding.xlsx
 
 import openpyxl
+# Alternatief: alleen de nodige functies:
+# from openpyxl import load_workbook, Workbook
 
 class ExcelFileActions:
     def __init__(self, file_path):
         """Initialiseer de klasse met het bestandspad van de Excel-file."""
         self.file_path = file_path
         self.workbook = openpyxl.load_workbook(file_path)
+'''
+Aanmaken __repr__
+Check bestand uit controller
+'''
 
     def check_file_status_1(self):
         while True:  # repeat until the try statement succeeds
@@ -95,6 +101,9 @@ class ExcelFileActions:
 
     def voeg_tabblad_toe(self, tabblad_naam, data):
         """Voeg een nieuw tabblad toe met gegeven naam en data (lijst van rijen)."""
+        ''' 
+        Met try functie zoals in f.5 in Excel_controller is het nog mooier
+        '''
         if isinstance(data, list):
             sheet = self.workbook.create_sheet(title=tabblad_naam)
             for row in data:
@@ -117,6 +126,10 @@ class ExcelFileActions:
 
 '''
 !!! Voeg functies uit tabbladen_lezen toe !!
+
+Voeg functie 4 sorteren in excel_controller toe, verwijder daarbij regel 1 (data[1:])
+
+
 '''
 
         def sluit_Excel(self):
@@ -141,6 +154,11 @@ print("Kolomnamen:", Kolommen)
 Kolomnaam = "activiteit"
 Kolom_data = TeamBestand.toon_inhoud_specifieke_kolom(Kolomnaam, 2)
 print("Kolom ", Kolomnaam, "bevat volgende inhoud: ", Kolom_data)
+
+'''
+Zet worksheet-data om naar dictionary
+'''
+
 
 # Hiermee eindigen
 TeamBestand.sluit_Excel()
