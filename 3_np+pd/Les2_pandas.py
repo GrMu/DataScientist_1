@@ -24,3 +24,4 @@ print(data4.shape)
 # print(data4.head(10)) # Eerste 1O
 instr = data4["instrument"].value_counts() # Geeft lijst van instrumenten en hoe vaak die voorkomen
 print(instr)
+print(data4.info())

@@ -1,38 +1,68 @@
 # Proefexamen CRUD met Excel
 # Basisbestand: teambuilding.xlsx
 
+# Import
 import openpyxl
 # Alternatief: alleen de nodige functies:
 # from openpyxl import load_workbook, Workbook
+from colorama import Fore #nodig voor CRUD
+from tabulate import tabulate
 
 class ExcelFileActions:
+    # Deze Excel-klasse leest altijd een bestaand bestand in. Louter wegschrijven kan dus niet.
+
     def __init__(self, file_path):
-        """Initialiseer de klasse met het bestandspad van de Excel-file."""
+        """Initialiseer de klasse met het bestandspad van de Excel-file. Geeft terug of bestand bestaat"""
         self.file_path = file_path
-        self.workbook = openpyxl.load_workbook(file_path)
-'''
-Aanmaken __repr__
-Check bestand uit controller
-'''
+        self.file_exists = False
+        '''
+        # File-check gebeurt nu in try/except met file_exists als output. Onderstaande code overbodig.
+        # Check file first
+        from os import path
+        if not path.isfile(file_path):
+            raise FileNotFoundError(f"Bestand '{file_path}' bestaat niet.")
+        if not file_path.lower().endswith(('.xlsx', '.xlsm')):
+            raise ValueError(
+                f"Bestand '{file_path}' heeft een ongeldig formaat. Alleen .xlsx en .xlsm worden ondersteund.")
+        '''
+        # ? Hier al controleren dat excelbestand open staat?
+        # Anderzijds lijkt dit geen probleem te geven op deze plaats.
+        try:
+            self.workbook = openpyxl.load_workbook(file_path)
+            self.file_exists = True
+        except Exception as e:
+            # print(e.args)
+            if e.args[0] == 2:
+                print(f"Fout: Het bestand '{file_path}' is niet gevonden.")
+            elif 'not support' in e.args[0]:
+                print(f"Fout: Het bestand '{file_path}' is geen .xlsx of .xlsm.")
+            else:
+                print(f"Fout: Het bestand '{file_path}' geeft foutmelding  {e}.")
+            self.file_exists = False
 
-    def check_file_status_1(self):
-        while True:  # repeat until the try statement succeeds
-            try:
-                myfile = open(self.file_path, "r+")  # or "a+", whatever you need
-                break  # exit the loop
-            except IOError:
-                input("Could not open file! Please close Excel. Press Enter to retry.")
-                # restart the loop
+    def __str__(self):
+        return f"File exists is {self.file_exists}. Workbook tried to open with path: {self.file_path}."
 
-    def check_file_status_2(self):
-        import os
-        while True:  # repeat until the try statement succeeds
-            try:
-                os.rename(self.file_path, self.file_path)
-                print("File is closed.")
-                break
-            except OSError:
-                input("Could not open file! Please close Excel. Press Enter to retry.")
+    def check_file_status(self, methode):
+        if methode == 1:
+            while True:  # repeat until the try statement succeeds
+                try:
+                    myfile = open(self.file_path, "r+")  # or "a+", whatever you need
+                    break  # exit the loop
+                except IOError:
+                    input("Could not open file! Please close Excel. Press Enter to retry.")
+                    # restart the loop
+        elif methode == 2:
+            import os
+            while True:  # repeat until the try statement succeeds
+                try:
+                    os.rename(self.file_path, self.file_path)
+                    print("File is closed.")
+                    break
+                except OSError:
+                    input("Could not open file! Please close Excel. Press Enter to retry.")
+        else:
+            print("Gekozen methode voor 'check_file_status' bestaat niet. Gebruik 1 of 2.")
 
     def toon_tabbladen(self):
         """Toon de namen van de tabbladen in het Excel-bestand."""
@@ -40,6 +70,8 @@ Check bestand uit controller
 
     def toon_data_tabblad_na_opvragen(self):
         """Toon de gegevens van een gekozen tabblad."""
+        Tabs = self.toon_tabbladen()
+        print(f"Er zijn de volgende tabbladen: {Tabs}")
         tabblad_naam = input("Geef de naam van het tabblad: ")
         if tabblad_naam in self.workbook.sheetnames:
             sheet = self.workbook[tabblad_naam]
@@ -50,7 +82,7 @@ Check bestand uit controller
         else:
             return f"Tabblad '{tabblad_naam}' bestaat niet."
 
-    def toon_data_actieve_tabblad(self):
+    def lees_data_actieve_tabblad(self):
         """Toon de gegevens van actieve tabblad."""
         worksheet = self.workbook.active
         data = []
@@ -76,7 +108,7 @@ Check bestand uit controller
                 print("Geen data gelezen in bestand")
                 kolommen = []
         else:
-            print("Methode is een andere waarde dan 1, 2 of 3: dat kan niet")
+            print("Methode voor 'toon_alle_kolommen' is een andere waarde dan 1, 2 of 3: dat kan niet")
         return kolommen
 
     def toon_inhoud_specifieke_kolom(self, kolomnaam, methode):
@@ -94,12 +126,12 @@ Check bestand uit controller
             kolom_data = [cell.value for cell in worksheet[kolom_letter]]
             kolom_data = kolom_data[1:] # verwijder eerste element (ofwel de kolomnaam)
         else:
-            print("Methode is niet 1 of 2")
+            print("Methode voor 'toon_inhoud_specifieke_kolom' is niet 1 of 2")
         # Filter dubbelen
         kolom_data = list(set(kolom_data))
         return kolom_data
 
-    def voeg_tabblad_toe(self, tabblad_naam, data):
+    def voeg_tabblad_toe_incl_data(self, tabblad_naam, data):
         """Voeg een nieuw tabblad toe met gegeven naam en data (lijst van rijen)."""
         ''' 
         Met try functie zoals in f.5 in Excel_controller is het nog mooier
@@ -120,46 +152,282 @@ Check bestand uit controller
         for row in data:
             worksheet.append(row)
         # Sla het Excel-bestand op
-        bestand = self.file_path
-        wb.save(bestand)
-        print("Excel-bestand opgeslagen als ", bestand)
+        self.workbook.save(self.file_path)
+        print("Excel-bestand opgeslagen met de data in het actieve tabblad.")
+
+    def verander_naam_tabblad(self, oude_naam, nieuwe_naam):
+        # Functie om een tabbladnaam te wijzigen
+        if oude_naam in self.workbook.sheetnames:
+            self.workbook[oude_naam].title = nieuwe_naam
+            self.workbook.save(self.file_path)
+            print(f"Tabblad '{oude_naam}' is hernoemd naar '{nieuwe_naam}'.")
+        else:
+            print(f"Fout: Tabblad '{oude_naam}' bestaat niet.")
+
+    def verwijder_tabblad(self, tabblad_naam):
+        # Functie om een tabblad te verwijderen
+        if tabblad_naam in self.workbook.sheetnames:
+            ws = self.workbook[tabblad_naam]
+            self.workbook.remove(ws)
+            self.workbook.save(self.file_path)
+            print(f"Tabblad '{tabblad_naam}' is verwijderd.")
+        else:
+            print(f"Fout: Tabblad '{tabblad_naam}' bestaat niet.")
+
+    def voeg_tabblad_toe(self, tabblad_naam):
+        # Functie om een nieuw tabblad toe te voegen
+        if tabblad_naam not in self.workbook.sheetnames:
+            self.workbook.create_sheet(title=tabblad_naam)
+            self.workbook.save(self.file_path)
+            print(f"Tabblad '{tabblad_naam}' is toegevoegd.")
+        else:
+            print(f"Fout: Tabblad '{tabblad_naam}' bestaat al.")
+
+    def sorteer_op_data_in_tabblad_op_kolomnummer(self, tabblad, kolomnummer):
+        # Functie 4: Sorteer op naam
+        try:
+            if tabblad in self.workbook.sheetnames:
+                ws = self.workbook[tabblad]
+                data = []
+                for row in ws.iter_rows(min_row=2, values_only=True):  # Start bij rij 2 om headers over te slaan
+                    data.append(row)
+
+                data.sort(key=lambda x: x[kolomnummer])  # Sorteer op een kolom (kolomnummer, startend op 0)
+                for i, row in enumerate(data, start=2):  # Schrijf gesorteerde data terug
+                    for j, value in enumerate(row, start=1):
+                        ws.cell(row=i, column=j, value=value)
+                self.workbook.save(self.file_path)
+                print("Tabblad is gesorteerd op naam (en opgeslagen).")
+            else:
+                print(f"Fout: Tabblad '{tabblad}' bestaat niet.")
+        except Exception as e:
+            print(f"Er is een fout opgetreden: {e}")
+
+        '''
+        Voeg functie 4 sorteren in excel_controller toe, verwijder daarbij regel 1 (data[1:])
+        
+        '''
+
+    def write_xlsfile_with_data(self, file_path_out, data):
+        Nieuw_workbook = openpyxl.Workbook() #Let op hoofdletter!
+        worksheet = Nieuw_workbook.active
+        # Voeg de data toe aan het werkblad
+        for row in data:
+            worksheet.append(row)
+        # Sla het Excel-bestand op
+        try:
+            Nieuw_workbook.save(file_path_out)
+            Nieuw_workbook.close() # Lijkt logisch. Stond niet in voorbeeld.
+            print(f"Excel-bestand {file_path_out} opgeslagen met de data in het actieve tabblad.")
+        except Exception as e:
+            print(e.args)
+            if 'not support' in e.args[0]:
+                print(f"Fout: Het bestand '{file_path}' is geen .xlsx of .xlsm.")
+            else:
+                print(f"Fout: Het bestand '{file_path}' geeft foutmelding  {e}.")
+            self.file_exists = False
+
+    def voeg_rij_toe_in_actief_tabblad(self):
+        Data = self.lees_data_actieve_tabblad()
+        worksheet = self.workbook.active
+        NieuweRij = vraag_nieuwe_rij_op(Data) #Data moet mee om header en data-types af te leiden
+        worksheet.append(NieuweRij)
+        self.workbook.save(self.file_path)
+        return NieuweRij
+
+    def Verwijder_rij_in_actief_tabblad(self):
+        Data = self.lees_data_actieve_tabblad()
+        worksheet = self.workbook.active
+        VerwijderdeRijIndex, VerwijderdeRij = vraag_te_verwijderen_rij_op(Data)  # Data moet mee om index af te leiden
+        print("Verwijderde rij: ", VerwijderdeRij)
+        if VerwijderdeRijIndex >= 0:
+            worksheet.delete_rows(VerwijderdeRijIndex+1) # offset van Header
+            self.workbook.save(self.file_path)
+        return VerwijderdeRij
+
+    def sluit_Excel(self):
+        self.workbook.close()
 
 '''
-!!! Voeg functies uit tabbladen_lezen toe !!
-
-Voeg functie 4 sorteren in excel_controller toe, verwijder daarbij regel 1 (data[1:])
-
-
+Andere functies dan de Excel-klasse
 '''
+def Toon_data(Data):
+    # print(Data)
+    '''DataDict = []
+    Header = Data(0)
+    for row in Data(1:)
 
-        def sluit_Excel(self):
-            self.workbook.close()
+    DataList = []
+    for row in Data:
+        DataList.append(list(row))
+    '''
+    Header = Data[0]
+    EchteData = Data[1:]
+    print(tabulate(Data[1:], headers=Data[0], tablefmt="fancy_grid", numalign="center"))
 
-# Main
+def Data_to_dict(Data):
+    Keys = list(Data[0])
+    Datawaarden= []
+    for row in Data[1:]:
+        Datawaarden.append(list(row))
+    # print("Datawaarden = ", Datawaarden)
+    DataDict = []
+    for row in Datawaarden:
+        RowDict = dict(zip(Keys, row))
+        DataDict.append(RowDict)
+    # print(DataDict)
+    return DataDict
 
-# Open bestand
-BestandAbs = r"C:\Users\mulderg\PycharmProjects\DataScientist_1\2_OOP\Data\teambuilding_activiteiten.xlsx"
-BestandRel = r"Data\teambuilding_activiteiten.xlsx"
-TeamBestand = ExcelFileActions(BestandRel)
-    # ("Data\teambuilding_activiteiten.xlsx")
-# check_file_status_1("data1.xlsx")
-TeamBestand.check_file_status_1()
-# Lees data (en toon de tabbladen)
-Tabs = TeamBestand.toon_tabbladen()
-print("Aanwezige tabbladen: ", Tabs)
-TeamData = TeamBestand.toon_data_actieve_tabblad()
-print("Alle data in Teambestand: ", TeamData)
-Kolommen = TeamBestand.toon_alle_kolomnamen(3) #geef methode (1,2,3) mee
-print("Kolomnamen:", Kolommen)
-Kolomnaam = "activiteit"
-Kolom_data = TeamBestand.toon_inhoud_specifieke_kolom(Kolomnaam, 2)
-print("Kolom ", Kolomnaam, "bevat volgende inhoud: ", Kolom_data)
+def vraag_nieuwe_rij_op(Data):
+    Header = Data[0]
+    Types = [str(type(Element)) for Element in Data[1]]
+    # print(Types)
+    Nieuwe_rij = []
+    Huidige_IDs = [element[0] for element in Data[1:]]
+    print('Huidige IDs: ', Huidige_IDs)
+    Hoogste_ID = max(Huidige_IDs)
+    ID = max((len(Data)), Hoogste_ID+1) # len(data) meenemen is misschien overbodig
+    print("ID: ", ID)
+    Nieuwe_rij.append(ID)
+    for num, element in enumerate(Header[1:]):
+        Invoer = input(f"Geef waarde voor {element}: ")
+        if Types[num+1] == "<class 'int'>":  # '+1' want eerste element ID wordt overgeslagen
+            Invoer = int(Invoer)
+        Nieuwe_rij.append(Invoer)
+    print(f"U heeft opgegeven als activiteit: {Nieuwe_rij}")
+    RijTuple = tuple(Nieuwe_rij)
+    # print(RijTuple)
+    return RijTuple
 
-'''
-Zet worksheet-data om naar dictionary
-'''
+def vraag_te_verwijderen_rij_op(Data):
+    Huidige_IDs = [element[0] for element in Data[1:]]
+    try:
+        Index_rij = int(input('Geef index van de te verwijderen rij: '))
+    except:
+        print("De invoer was geen geheel getal")
+        return -1, None # Foute invoer
+    if Index_rij in Huidige_IDs:
+        for index, rij in enumerate(Data):
+            if rij[0] == Index_rij:
+                VerwijderdeRijIndex = index
+                VerwijderdeRij = rij
+        return VerwijderdeRijIndex, VerwijderdeRij
+    else:
+        print(f"De opgegeven index {Index_rij} bestaat niet.")
+        return -1, None
 
+def Test_alle_klassefuncties():
+    # Debugging van Excel-klasse: overlopen van alle opgenomen functies
+    TestData = [[1, "A"], [2, "B"], [3, "C"], [4, "D"]]
+    TeamBestand.check_file_status(1)  # geef methode (1,2) mee
+    # Lees data (en toon de tabbladen)
+    Tabs = TeamBestand.toon_tabbladen()
+    print("Aanwezige tabbladen: ", Tabs)
+    TeamData = TeamBestand.toon_data_tabblad_na_opvragen()
+    print("Alle data in Teambestand: ", TeamData)
+    TeamData = TeamBestand.lees_data_actieve_tabblad()
+    print("Alle data in Teambestand: ", TeamData)
+    Kolommen = TeamBestand.toon_alle_kolomnamen(3)  # geef methode (1,2,3) mee
+    print("Kolomnamen:", Kolommen)
+    Kolomnaam = "activiteit"
+    Kolom_data = TeamBestand.toon_inhoud_specifieke_kolom(Kolomnaam, 2)  # geef methode (1,2) mee
+    print("Kolom ", Kolomnaam, "bevat volgende inhoud: ", Kolom_data)
+    Tabblad_nieuw = 'Sheet_nw'
+    TeamBestand.voeg_tabblad_toe_incl_data(Tabblad_nieuw, TestData)
+    print(f"Tabblad {Tabblad_nieuw} is toegevoegd met testdata")
+    TeamBestand.verwijder_tabblad(Tabblad_nieuw)
+    # print(f"Tabblad {Tabblad_nieuw} is weer verwijderd")
+    TeamBestand.voeg_tabblad_toe(Tabblad_nieuw)
+    print(f"Tabblad {Tabblad_nieuw} is toegevoegd zonder data")
+    TeamBestand.verwijder_tabblad(Tabblad_nieuw)
+    # print(f"Tabblad {Tabblad_nieuw} is weer verwijderd")
+    Tabblad_orig = 'Sheet1'
+    Tabblad_nieuwe_naam = 'Sheet1A'
+    TeamBestand.verander_naam_tabblad(Tabblad_orig, Tabblad_nieuwe_naam)
+    print(f"Tabblad {Tabblad_orig} hernoemd in {Tabblad_nieuwe_naam} en bestand opgeslagen.")
+    TeamBestand.verander_naam_tabblad(Tabblad_nieuwe_naam, Tabblad_orig)
+    print(f"Tabblad {Tabblad_nieuwe_naam} hernoemd in {Tabblad_orig} en bestand opgeslagen.")
+    TeamBestand.sorteer_op_data_in_tabblad_op_kolomnummer('Sheet1',2)
+    # print("Data gesorteerd en opgeslagen")
+    TeamBestand.opslaan_data_in_actief_tabblad(TeamData)
+    # print("Data opgeslagen in actief tabblad")
 
-# Hiermee eindigen
-TeamBestand.sluit_Excel()
+def Vraag_keuze():
+    print("Excel Manager:")
+    print(Fore.GREEN+"Maak keuze uit volgende lijst:")
+    print(Fore.RESET+"1.	Toon alle activiteiten")
+    print("2.	Voeg een activiteit toe")
+    print("3.	Verwijder een activiteit")
+    print("4.	Pas de locatie van een activiteit aan")
+    print("5.	Pas de activiteit aan inclusief prijs")
+    print("6.	Sorteer de activiteiten op kostprijs van hoog naar laag")
+    print("7.	Maak een apart Excelbestand met activiteiten met lunch")
+    print(Fore.RED+"8.   Stop")
+    print(Fore.RESET + " ")
+    try:
+        Keuze_lokaal = int(input("Mijn keuze is: "))
+    except:
+        print("Foutieve keuze. Alleen getallen kunnen worden ingevoerd.")
+        Keuze_lokaal = None
+    print("Uw keuze is:  ", Keuze_lokaal)
+    return Keuze_lokaal
+
+"""
+*** Hoofdgedeelte *** 
+"""
+# Initialisatie
+Foute_keus = 0
+Keuze = None
+
+# Programma
+if __name__ == "__main__":
+    # Open bestand (de Excelklasse werkt alleen als het bestand bestaat)
+    BestandAbs = r"C:\Users\mulderg\PycharmProjects\DataScientist_1\2_OOP\Data\teambuilding_activiteiten.xlsx"
+    BestandRel = r"Data\teambuilding_activiteiten.xlsx"
+    TeamBestand = ExcelFileActions(BestandRel)
+    print(TeamBestand)
+    if TeamBestand.file_exists == True:
+        # Test_alle_klassefuncties() # debuggen Excelklasse
+        #CRUD
+        # Gebruiker maakt een keuze
+        while ((Keuze != 8) and (Foute_keus < 4)):
+            Keuze = Vraag_keuze()
+            # print("Nogmaals, uw keuze blijkt : ", Keuze)
+            if Keuze == 1:
+                Foute_keus = 0
+                TeamData = TeamBestand.lees_data_actieve_tabblad()
+                print(TeamData)
+                Toon_data(TeamData)
+                # DataDict = Data_to_dict(TeamData)
+                toets = input("Keuze 1 is afgelopen. Druk op Enter")
+            elif Keuze == 2: # Voeg activiteit toe
+                Foute_keus = 0
+                # TeamData = TeamBestand.lees_data_actieve_tabblad()
+                NieuweRij = TeamBestand.voeg_rij_toe_in_actief_tabblad()
+                print("Activiteitendata aangepast met : ", NieuweRij)
+                toets = input("Keuze 2 is afgelopen. Druk op Enter")
+            elif Keuze == 3: # Verwijder activiteit
+                Foute_keus = 0
+                VerwijderdeRij = TeamBestand.Verwijder_rij_in_actief_tabblad()
+                print("Activiteitendata aangepast door te verwijderen: ", VerwijderdeRij)
+            elif Keuze == 4:  # Filter muzikanten (Toon alle muzikanten van gender x in tabulate)
+                Foute_keus = 0
+                Filter_muzikanten(Muzikantendata, Key_om_op_te_zoeken) # Geef Key mee
+            elif Keuze == 5:  # Pas een veld aan (Pas het instrument aan van de muzikant"
+                Foute_keus = 0
+                Muzikantendata = Wijzig_muzikanten(Muzikantendata, Key_te_wijzigen) # Geef Key mee
+            elif Keuze == 6:  # Sorteer muzikanten op naam a-z"
+                Foute_keus = 0
+                Sorteer_Muzikanten(Muzikantendata, Key_naam, False) # (dict, Key, Reverse (True/False))
+            elif Keuze == 7:  # Schrijf naar nieuw bestand"
+                Foute_keus = 0
+                Schrijf_bestand(Muzikantendata, Uitvoerbestand)
+            else:
+                print("Geen opdracht of vraag tot beëindiging")
+                Foute_keus += 1
+        print("Programma beëindigd")
+
+    # Hiermee eindigen
+    if TeamBestand.file_exists == True:
+        TeamBestand.sluit_Excel()
 

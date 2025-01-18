@@ -2,7 +2,7 @@ from openpyxl import load_workbook
 
 # Laad het Excel-bestand
 wb = load_workbook("data.xlsx")
-ws = wb.active
+ws = workbook.active
 
 # Lees de data in een 2D-lijst
 data = []

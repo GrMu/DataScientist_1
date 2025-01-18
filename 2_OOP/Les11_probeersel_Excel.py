@@ -27,7 +27,7 @@ check_file_status_2(Excelbestand)
 data = [[1, "A"], [2, "B"], [3, "C"], [4, "D"]]
 # wb = Workbook()
 wb = openpyxl.load_workbook(Excelbestand)
-ws = wb.active
+ws = workbook.active
 max_row = ws.max_row
 max_col = ws.max_column
 print("max_row: ", max_row, ", max_col: ", max_col)
