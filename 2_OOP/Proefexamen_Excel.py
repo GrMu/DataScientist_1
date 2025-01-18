@@ -114,14 +114,14 @@ class ExcelFileActions:
     def toon_inhoud_specifieke_kolom(self, kolomnaam, methode):
         worksheet = self.workbook.active
         Kolommen = TeamBestand.toon_alle_kolomnamen(2)
-        kolom_index = Kolommen.index(kolomnaam) + 1
+        kolom_index = Kolommen.index(kolomnaam)
         # Creëer een set van de kolomdata
         if methode == 1:
             kolom_data = []
             for row in worksheet.iter_rows(min_row=2, values_only=True):
                 kolom_data.append(row[kolom_index - 1])
         elif methode == 2:
-            kolom_letter = chr(65+ kolom_index -1)
+            kolom_letter = chr(65+ kolom_index)
             print("Gezochte kolom is: ", kolom_letter)
             kolom_data = [cell.value for cell in worksheet[kolom_letter]]
             kolom_data = kolom_data[1:] # verwijder eerste element (ofwel de kolomnaam)
@@ -129,7 +129,7 @@ class ExcelFileActions:
             print("Methode voor 'toon_inhoud_specifieke_kolom' is niet 1 of 2")
         # Filter dubbelen
         kolom_data = list(set(kolom_data))
-        return kolom_data
+        return kolom_data, kolom_index
 
     def voeg_tabblad_toe_incl_data(self, tabblad_naam, data):
         """Voeg een nieuw tabblad toe met gegeven naam en data (lijst van rijen)."""
@@ -146,13 +146,28 @@ class ExcelFileActions:
             return "De ingevoerde data is geen lijst van rijen."
 
     def opslaan_data_in_actief_tabblad(self, data):
-        # Pas op: dit overschrijft huidige data in het bestand
+        # Pas op: voegt data onder toe aan vorige data
         worksheet = self.workbook.active
         # Voeg de data toe aan het werkblad
         for row in data:
             worksheet.append(row)
         # Sla het Excel-bestand op
         self.workbook.save(self.file_path)
+        print("Excel-bestand opgeslagen met de data in het actieve tabblad.")
+
+    def vervang_data_in_actief_tabblad_behalve_header(self, Data):
+        # Pas op: dit ledigt worksheet en schrijft dan de nieuwe data. De header blijft echter
+        worksheet = self.workbook.active
+        VorigeData = []
+        for row in worksheet.iter_rows(values_only=True):
+            VorigeData.append(row)
+        Lengte_VorigeData = len(VorigeData)
+        worksheet.delete_rows(2,Lengte_VorigeData-1)
+        # Schrijf nu de nieuwe data
+        for row in Data[1:]: # Sla header over
+            worksheet.append(row)
+        self.workbook.save(self.file_path)
+        # Voeg de data toe aan het werkblad
         print("Excel-bestand opgeslagen met de data in het actieve tabblad.")
 
     def verander_naam_tabblad(self, oude_naam, nieuwe_naam):
@@ -252,17 +267,6 @@ class ExcelFileActions:
 Andere functies dan de Excel-klasse
 '''
 def Toon_data(Data):
-    # print(Data)
-    '''DataDict = []
-    Header = Data(0)
-    for row in Data(1:)
-
-    DataList = []
-    for row in Data:
-        DataList.append(list(row))
-    '''
-    Header = Data[0]
-    EchteData = Data[1:]
     print(tabulate(Data[1:], headers=Data[0], tablefmt="fancy_grid", numalign="center"))
 
 def Data_to_dict(Data):
@@ -316,6 +320,37 @@ def vraag_te_verwijderen_rij_op(Data):
         print(f"De opgegeven index {Index_rij} bestaat niet.")
         return -1, None
 
+def Pas_locatie_activiteit_aan():
+    TeamData = TeamBestand.lees_data_actieve_tabblad()
+    # Toon_data(TeamData)
+    # TeamData omzetten van list van tuples naar list van lists, want anders kunnen cellen niet worden aangepast
+    TeamData = [list(Rij) for Rij in TeamData]
+    # print("Check dat Teamdata nu list van list is geworden: ", TeamData)
+    KolomData, KolomIndex = TeamBestand.toon_inhoud_specifieke_kolom('activiteit', 2) # methode 1 blijkt fout want geeft rij
+    # Vind index 'locatie'
+    GezochteKolom = 'locatie'
+    Index_GezochteKolom = None
+    # print(TeamData[0])
+    for index, KolomNaam in enumerate(TeamData[0]):
+        if KolomNaam == GezochteKolom:
+            Index_GezochteKolom = index
+            break
+    if Index_GezochteKolom == None:
+        print(f"Kolomnaam {GezochteKolom} is niet gevonden in de kop van de data. ")
+        return False       # Actie mislukt
+    print(f"Volgende activiteiten bestaan: {KolomData}")
+    GezochteActiviteit = input(f"Welke activiteit wilt u van plaats veranderen? : ")
+    if GezochteActiviteit in KolomData:
+        NieuwePlaats = input("Wat is de nieuwe plaats? : ")
+        for i, row in enumerate(TeamData[1:]):
+            if row[KolomIndex] == GezochteActiviteit:
+                TeamData[i+1][Index_GezochteKolom] = NieuwePlaats
+        TeamBestand.vervang_data_in_actief_tabblad_behalve_header(TeamData)
+        return True # Actie gelukt
+    else:
+        print(f"De gezochte activiteit {GezochteActiviteit} komt niet voor in de data. ")
+        return False  # Actie mislukt
+
 def Test_alle_klassefuncties():
     # Debugging van Excel-klasse: overlopen van alle opgenomen functies
     TestData = [[1, "A"], [2, "B"], [3, "C"], [4, "D"]]
@@ -330,7 +365,7 @@ def Test_alle_klassefuncties():
     Kolommen = TeamBestand.toon_alle_kolomnamen(3)  # geef methode (1,2,3) mee
     print("Kolomnamen:", Kolommen)
     Kolomnaam = "activiteit"
-    Kolom_data = TeamBestand.toon_inhoud_specifieke_kolom(Kolomnaam, 2)  # geef methode (1,2) mee
+    Kolom_data, KolomIndex = TeamBestand.toon_inhoud_specifieke_kolom(Kolomnaam, 2)  # geef methode (1,2) mee
     print("Kolom ", Kolomnaam, "bevat volgende inhoud: ", Kolom_data)
     Tabblad_nieuw = 'Sheet_nw'
     TeamBestand.voeg_tabblad_toe_incl_data(Tabblad_nieuw, TestData)
@@ -410,9 +445,10 @@ if __name__ == "__main__":
                 Foute_keus = 0
                 VerwijderdeRij = TeamBestand.Verwijder_rij_in_actief_tabblad()
                 print("Activiteitendata aangepast door te verwijderen: ", VerwijderdeRij)
-            elif Keuze == 4:  # Filter muzikanten (Toon alle muzikanten van gender x in tabulate)
+            elif Keuze == 4:  # Pas locatie activiteit aan
                 Foute_keus = 0
-                Filter_muzikanten(Muzikantendata, Key_om_op_te_zoeken) # Geef Key mee
+                Gelukt = Pas_locatie_activiteit_aan() # Geeft succes retour
+                print("De locatie is aangepast: ", Gelukt)
             elif Keuze == 5:  # Pas een veld aan (Pas het instrument aan van de muzikant"
                 Foute_keus = 0
                 Muzikantendata = Wijzig_muzikanten(Muzikantendata, Key_te_wijzigen) # Geef Key mee
