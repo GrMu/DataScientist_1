@@ -1,5 +1,5 @@
-# Proefexamen CRUD met Excel
-# Basisbestand: teambuilding.xlsx
+# Examen CRUD met Excel
+# Basisbestand: consultants_data.xlsx
 
 # Import
 import openpyxl
@@ -68,20 +68,6 @@ class ExcelFileActions:
         """Toon de namen van de tabbladen in het Excel-bestand."""
         return self.workbook.sheetnames
 
-    def toon_data_tabblad_na_opvragen(self):
-        """Toon de gegevens van een gekozen tabblad."""
-        Tabs = self.toon_tabbladen()
-        print(f"Er zijn de volgende tabbladen: {Tabs}")
-        tabblad_naam = input("Geef de naam van het tabblad: ")
-        if tabblad_naam in self.workbook.sheetnames:
-            sheet = self.workbook[tabblad_naam]
-            data = []
-            for row in sheet.iter_rows(values_only=True):
-                data.append(row)
-            return data
-        else:
-            return f"Tabblad '{tabblad_naam}' bestaat niet."
-
     def lees_data_actieve_tabblad(self):
         """Toon de gegevens van actieve tabblad."""
         worksheet = self.workbook.active
@@ -113,7 +99,7 @@ class ExcelFileActions:
 
     def toon_inhoud_specifieke_kolom(self, kolomnaam, methode):
         worksheet = self.workbook.active
-        Kolommen = TeamBestand.toon_alle_kolomnamen(2)
+        Kolommen = ConsultantBestand.toon_alle_kolomnamen(2)
         kolom_index = Kolommen.index(kolomnaam)
         # Creëer een set van de kolomdata
         if methode == 1:
@@ -130,20 +116,6 @@ class ExcelFileActions:
         # Filter dubbelen
         kolom_data = list(set(kolom_data))
         return kolom_data, kolom_index
-
-    def voeg_tabblad_toe_incl_data(self, tabblad_naam, data):
-        """Voeg een nieuw tabblad toe met gegeven naam en data (lijst van rijen)."""
-        ''' 
-        Met try functie zoals in f.5 in Excel_controller is het nog mooier
-        '''
-        if isinstance(data, list):
-            sheet = self.workbook.create_sheet(title=tabblad_naam)
-            for row in data:
-                sheet.append(row)
-            self.workbook.save(self.file_path)
-            return f"Tabblad '{tabblad_naam}' is toegevoegd."
-        else:
-            return "De ingevoerde data is geen lijst van rijen."
 
     def opslaan_data_in_actief_tabblad(self, data):
         # Pas op: voegt data onder toe aan vorige data
@@ -170,34 +142,6 @@ class ExcelFileActions:
         # Voeg de data toe aan het werkblad
         print("Excel-bestand opgeslagen met de data in het actieve tabblad.")
 
-    def verander_naam_tabblad(self, oude_naam, nieuwe_naam):
-        # Functie om een tabbladnaam te wijzigen
-        if oude_naam in self.workbook.sheetnames:
-            self.workbook[oude_naam].title = nieuwe_naam
-            self.workbook.save(self.file_path)
-            print(f"Tabblad '{oude_naam}' is hernoemd naar '{nieuwe_naam}'.")
-        else:
-            print(f"Fout: Tabblad '{oude_naam}' bestaat niet.")
-
-    def verwijder_tabblad(self, tabblad_naam):
-        # Functie om een tabblad te verwijderen
-        if tabblad_naam in self.workbook.sheetnames:
-            ws = self.workbook[tabblad_naam]
-            self.workbook.remove(ws)
-            self.workbook.save(self.file_path)
-            print(f"Tabblad '{tabblad_naam}' is verwijderd.")
-        else:
-            print(f"Fout: Tabblad '{tabblad_naam}' bestaat niet.")
-
-    def voeg_tabblad_toe(self, tabblad_naam):
-        # Functie om een nieuw tabblad toe te voegen
-        if tabblad_naam not in self.workbook.sheetnames:
-            self.workbook.create_sheet(title=tabblad_naam)
-            self.workbook.save(self.file_path)
-            print(f"Tabblad '{tabblad_naam}' is toegevoegd.")
-        else:
-            print(f"Fout: Tabblad '{tabblad_naam}' bestaat al.")
-
     def sorteer_op_data_in_tabblad_op_kolomnummer(self, tabblad, kolomnummer):
         # Functie 4: Sorteer op naam
         try:
@@ -218,11 +162,6 @@ class ExcelFileActions:
         except Exception as e:
             print(f"Er is een fout opgetreden: {e}")
 
-        '''
-        Voeg functie 4 sorteren in excel_controller toe, verwijder daarbij regel 1 (data[1:])
-        
-        '''
-
     def write_xlsfile_with_data(self, file_path_out, data):
         Nieuw_workbook = openpyxl.Workbook() #Let op hoofdletter!
         worksheet = Nieuw_workbook.active
@@ -237,9 +176,9 @@ class ExcelFileActions:
         except Exception as e:
             print(e.args)
             if 'not support' in e.args[0]:
-                print(f"Fout: Het bestand '{file_path}' is geen .xlsx of .xlsm.")
+                print(f"Fout: Het bestand '{self.file_path}' is geen .xlsx of .xlsm.")
             else:
-                print(f"Fout: Het bestand '{file_path}' geeft foutmelding  {e}.")
+                print(f"Fout: Het bestand '{self.file_path}' geeft foutmelding  {e}.")
             self.file_exists = False
 
     def voeg_rij_toe_in_actief_tabblad(self):
@@ -261,7 +200,6 @@ class ExcelFileActions:
         return VerwijderdeRij
 
     def sorteer_data_in_actief_tabblad(self, Data, Index_SorteerKolom, order):
-
         worksheet = self.workbook.active
         Data_zonder_header = Data[1:]
         if order.lower()=='descendent':
@@ -285,19 +223,6 @@ Andere functies dan de Excel-klasse
 def Toon_data(Data):
     print(tabulate(Data[1:], headers=Data[0], tablefmt="fancy_grid", numalign="center"))
 
-def Data_to_dict(Data):
-    Keys = list(Data[0])
-    Datawaarden= []
-    for row in Data[1:]:
-        Datawaarden.append(list(row))
-    # print("Datawaarden = ", Datawaarden)
-    DataDict = []
-    for row in Datawaarden:
-        RowDict = dict(zip(Keys, row))
-        DataDict.append(RowDict)
-    # print(DataDict)
-    return DataDict
-
 def Geef_kolomindex_voor_kolomnaam(Kolomnaam, Data):
     GezochteKolom = Kolomnaam
     Index_GezochteKolom = None
@@ -310,7 +235,6 @@ def Geef_kolomindex_voor_kolomnaam(Kolomnaam, Data):
         print(f"Kolomnaam {GezochteKolom} is niet gevonden in de kop van de data. ")
         return Index_GezochteKolom, False  # Actie mislukt
 
-
 def vraag_nieuwe_rij_op(Data):
     Header = Data[0]
     Types = [str(type(Element)) for Element in Data[1]]
@@ -320,12 +244,14 @@ def vraag_nieuwe_rij_op(Data):
     print('Huidige IDs: ', Huidige_IDs)
     Hoogste_ID = max(Huidige_IDs)
     ID = max((len(Data)), Hoogste_ID+1) # len(data) meenemen is misschien overbodig
-    print("ID: ", ID)
+    print("Nieuwe ID wordt: ", ID)
     Nieuwe_rij.append(ID)
     for num, element in enumerate(Header[1:]):
         Invoer = input(f"Geef waarde voor {element}: ")
         if Types[num+1] == "<class 'int'>":  # '+1' want eerste element ID wordt overgeslagen
             Invoer = int(Invoer)
+        if Types[num + 1] == "<class 'float'>":  # '+1' want eerste element ID wordt overgeslagen
+            Invoer = float(Invoer)
         Nieuwe_rij.append(Invoer)
     print(f"U heeft opgegeven als activiteit: {Nieuwe_rij}")
     RijTuple = tuple(Nieuwe_rij)
@@ -349,111 +275,76 @@ def vraag_te_verwijderen_rij_op(Data):
         print(f"De opgegeven index {Index_rij} bestaat niet.")
         return -1, None
 
-def Pas_locatie_activiteit_aan():
-    TeamData = TeamBestand.lees_data_actieve_tabblad()
-    # Toon_data(TeamData)
-    # TeamData omzetten van list van tuples naar list van lists, want anders kunnen cellen niet worden aangepast
-    TeamData = [list(Rij) for Rij in TeamData]
-    # print("Check dat Teamdata nu list van list is geworden: ", TeamData)
-    KolomData, KolomIndex = TeamBestand.toon_inhoud_specifieke_kolom('activiteit', 2) # methode 1 blijkt fout want geeft rij
-    # Vind index 'locatie'
-    GezochteKolom = 'locatie'
-    Index_GezochteKolom = None
-    # print(TeamData[0])
-    for index, KolomNaam in enumerate(TeamData[0]):
-        if KolomNaam == GezochteKolom:
-            Index_GezochteKolom = index
+def Pas_uurtarief_consultant_aan():
+    ConsultantData = ConsultantBestand.lees_data_actieve_tabblad()
+    # Toon_data(ConsultantData)
+    # ConsultantData omzetten van list van tuples naar list van lists, want anders kunnen cellen niet worden aangepast
+    ConsultantData = [list(Rij) for Rij in ConsultantData]
+    # print("Check dat ConsultantData nu list van list is geworden: ", ConsultantData)
+    ZoekKolomNaam = 'Id'
+    KolomData, KolomIndex = ConsultantBestand.toon_inhoud_specifieke_kolom(ZoekKolomNaam , 2) # methode 1 blijkt fout want geeft rij
+    print(f"(KolomData van {ZoekKolomNaam} is {KolomData}")
+    # Vind index 'uurtarief'
+    TeVervangenKolom = 'Uurtarief'
+    Index_TeVervangenKolom = None
+    # print(ConsultantData[0])
+    for index, KolomNaam in enumerate(ConsultantData[0]): #Bestudeer header
+        if KolomNaam == TeVervangenKolom:
+            Index_TeVervangenKolom = index
             break
-    if Index_GezochteKolom == None:
-        print(f"Kolomnaam {GezochteKolom} is niet gevonden in de kop van de data. ")
+    if Index_TeVervangenKolom == None:
+        print(f"Kolomnaam {TeVervangenKolom} is niet gevonden in de kop van de data. ")
         return False       # Actie mislukt
-    print(f"Volgende activiteiten bestaan: {KolomData}")
-    GezochteActiviteit = input(f"Welke activiteit wilt u van plaats veranderen? : ")
-    if GezochteActiviteit in KolomData:
-        NieuwePlaats = input("Wat is de nieuwe plaats? : ")
-        for i, row in enumerate(TeamData[1:]):
-            if row[KolomIndex] == GezochteActiviteit:
-                TeamData[i+1][Index_GezochteKolom] = NieuwePlaats
-        TeamBestand.vervang_data_in_actief_tabblad_behalve_header(TeamData)
+    # print(f"Om een idee te geven: volgende ID's bestaan: {KolomData}")
+    GezochteID = int(input(f"Welke ID wilt u van uurtarief veranderen? : "))
+    if GezochteID in KolomData:
+        NieuwTarief = float(input("Wat is het nieuwe uurtarief? : "))
+        for i, row in enumerate(ConsultantData[1:]):
+            if row[KolomIndex] == GezochteID:
+                print(f"Rij ID = {row[KolomIndex]} met Oorspronkelijk tarief: {ConsultantData[i+1][Index_TeVervangenKolom]} wordt vervangen door nieuw tarief {NieuwTarief}")
+                ConsultantData[i+1][Index_TeVervangenKolom] = NieuwTarief # +1 want eerst header uitgesloten
+        ConsultantBestand.vervang_data_in_actief_tabblad_behalve_header(ConsultantData)
         return True # Actie gelukt
     else:
-        print(f"De gezochte activiteit {GezochteActiviteit} komt niet voor in de data. ")
+        print(f"De gezochte {ZoekKolomNaam} {GezochteID} komt niet voor in de data. ")
         return False  # Actie mislukt
 
-def Sorteer_kostprijs():
-    TeamData = TeamBestand.lees_data_actieve_tabblad()
-    # TeamData = [list(Rij) for Rij in TeamData]
-    # Vind index 'kostprijs'
-    GezochteKolom = 'kostprijs'
-    Index_GezochteKolom, Gevonden = Geef_kolomindex_voor_kolomnaam(GezochteKolom, TeamData)
+def Sorteer_uurprijs():
+    ConsultantData = ConsultantBestand.lees_data_actieve_tabblad()
+    GezochteKolom = 'Uurtarief'
+    Index_GezochteKolom, Gevonden = Geef_kolomindex_voor_kolomnaam(GezochteKolom, ConsultantData)
     if Gevonden:
-        TeamBestand.sorteer_data_in_actief_tabblad(TeamData, Index_GezochteKolom, 'descendent')
+        ConsultantBestand.sorteer_data_in_actief_tabblad(ConsultantData, Index_GezochteKolom, 'descendent')
         return True  # Actie gelukt
     else: return False # Actie mislukt
 
-def Schrijf_lunchbestand():
-    TeamData = TeamBestand.lees_data_actieve_tabblad()
-    GezochteKolom = 'lunch'
-    GezochteTerm = 'ja'
-    KolomIndex, Gevonden = Geef_kolomindex_voor_kolomnaam(GezochteKolom, TeamData)
+def Schrijf_HRbestand():
+    ConsultantData = ConsultantBestand.lees_data_actieve_tabblad()
+    GezochteKolom = 'Domein'
+    GezochteTerm = 'HR'
+    KolomIndex, Gevonden = Geef_kolomindex_voor_kolomnaam(GezochteKolom, ConsultantData)
     if Gevonden:
-        DataExtract = TeamData[0] # De header
-        for row in TeamData[1:]:
+        DataExtract = []
+        DataExtract.append(list(ConsultantData[0])) # De header
+        for row in ConsultantData[1:]:
             Term = row[KolomIndex]
             if Term.lower() == GezochteTerm.lower():
                 DataExtract.append(row)
         print("DataExtract: ", DataExtract)
-        NieuwBestand = r"Data\teambuilding_activiteiten_met_lunch.xlsx"
-        TeamBestand.write_xlsfile_with_data (NieuwBestand, DataExtract)
+        NieuwBestand = r"HR-consultants.xlsx"
+        ConsultantBestand.write_xlsfile_with_data (NieuwBestand, DataExtract)
         print(f"Bestand {NieuwBestand} is weggeschreven.")
-
-def Test_alle_klassefuncties():
-    # Debugging van Excel-klasse: overlopen van alle opgenomen functies
-    TestData = [[1, "A"], [2, "B"], [3, "C"], [4, "D"]]
-    TeamBestand.check_file_status(1)  # geef methode (1,2) mee
-    # Lees data (en toon de tabbladen)
-    Tabs = TeamBestand.toon_tabbladen()
-    print("Aanwezige tabbladen: ", Tabs)
-    TeamData = TeamBestand.toon_data_tabblad_na_opvragen()
-    print("Alle data in Teambestand: ", TeamData)
-    TeamData = TeamBestand.lees_data_actieve_tabblad()
-    print("Alle data in Teambestand: ", TeamData)
-    Kolommen = TeamBestand.toon_alle_kolomnamen(3)  # geef methode (1,2,3) mee
-    print("Kolomnamen:", Kolommen)
-    Kolomnaam = "activiteit"
-    Kolom_data, KolomIndex = TeamBestand.toon_inhoud_specifieke_kolom(Kolomnaam, 2)  # geef methode (1,2) mee
-    print("Kolom ", Kolomnaam, "bevat volgende inhoud: ", Kolom_data)
-    Tabblad_nieuw = 'Sheet_nw'
-    TeamBestand.voeg_tabblad_toe_incl_data(Tabblad_nieuw, TestData)
-    print(f"Tabblad {Tabblad_nieuw} is toegevoegd met testdata")
-    TeamBestand.verwijder_tabblad(Tabblad_nieuw)
-    # print(f"Tabblad {Tabblad_nieuw} is weer verwijderd")
-    TeamBestand.voeg_tabblad_toe(Tabblad_nieuw)
-    print(f"Tabblad {Tabblad_nieuw} is toegevoegd zonder data")
-    TeamBestand.verwijder_tabblad(Tabblad_nieuw)
-    # print(f"Tabblad {Tabblad_nieuw} is weer verwijderd")
-    Tabblad_orig = 'Sheet1'
-    Tabblad_nieuwe_naam = 'Sheet1A'
-    TeamBestand.verander_naam_tabblad(Tabblad_orig, Tabblad_nieuwe_naam)
-    print(f"Tabblad {Tabblad_orig} hernoemd in {Tabblad_nieuwe_naam} en bestand opgeslagen.")
-    TeamBestand.verander_naam_tabblad(Tabblad_nieuwe_naam, Tabblad_orig)
-    print(f"Tabblad {Tabblad_nieuwe_naam} hernoemd in {Tabblad_orig} en bestand opgeslagen.")
-    TeamBestand.sorteer_op_data_in_tabblad_op_kolomnummer('Sheet1',2)
-    # print("Data gesorteerd en opgeslagen")
-    TeamBestand.opslaan_data_in_actief_tabblad(TeamData)
-    # print("Data opgeslagen in actief tabblad")
 
 def Vraag_keuze():
     print("Excel Manager:")
     print(Fore.GREEN+"Maak keuze uit volgende lijst:")
-    print(Fore.RESET+"1.	Toon alle activiteiten")
-    print("2.	Voeg een activiteit toe")
-    print("3.	Verwijder een activiteit")
-    print("4.	Pas de locatie van een activiteit aan")
-    print("5.	Pas de activiteit aan inclusief prijs")
-    print("6.	Sorteer de activiteiten op kostprijs van hoog naar laag")
-    print("7.	Maak een apart Excelbestand met activiteiten met lunch")
-    print(Fore.RED+"8.   Stop")
+    print(Fore.RESET+"1.	Toon alle consultants")
+    print("2.	Voeg een consultant toe")
+    print("3.	Verwijder een consultant")
+    print("4.	Pas het uurtarief van een consultant aan")
+    print("5.	Sorteer de consultants op uurprijs van hoog naar laag")
+    print("6.	Maak een apart Excelbestand met HR-consultants")
+    print(Fore.RED+"7.   Stop")
     print(Fore.RESET + " ")
     try:
         Keuze_lokaal = int(input("Mijn keuze is: "))
@@ -473,54 +364,46 @@ Keuze = None
 # Programma
 if __name__ == "__main__":
     # Open bestand (de Excelklasse werkt alleen als het bestand bestaat)
-    BestandAbs = r"C:\Users\mulderg\PycharmProjects\DataScientist_1\2_OOP\Data\teambuilding_activiteiten.xlsx"
-    BestandRel = r"Data\teambuilding_activiteiten.xlsx"
-    TeamBestand = ExcelFileActions(BestandRel)
-    print(TeamBestand)
-    if TeamBestand.file_exists == True:
-        # Test_alle_klassefuncties() # debuggen Excelklasse
-        #CRUD
+    BestandRel = r"consultants_data.xlsx"
+    ConsultantBestand = ExcelFileActions(BestandRel) # Open Excel-bestand als object
+    print(ConsultantBestand)
+    if ConsultantBestand.file_exists == True:
         # Gebruiker maakt een keuze
-        while ((Keuze != 8) and (Foute_keus < 4)):
+        while ((Keuze != 7) and (Foute_keus < 4)):
             Keuze = Vraag_keuze()
-            # print("Nogmaals, uw keuze blijkt : ", Keuze)
             if Keuze == 1:
                 Foute_keus = 0
-                TeamData = TeamBestand.lees_data_actieve_tabblad()
-                print(TeamData)
-                Toon_data(TeamData)
-                # DataDict = Data_to_dict(TeamData)
+                ConsultantData = ConsultantBestand.lees_data_actieve_tabblad()
+                print(ConsultantData)
+                Toon_data(ConsultantData)
+                # DataDict = Data_to_dict(ConsultantData)
                 toets = input("Keuze 1 is afgelopen. Druk op Enter")
             elif Keuze == 2: # Voeg activiteit toe
                 Foute_keus = 0
-                # TeamData = TeamBestand.lees_data_actieve_tabblad()
-                NieuweRij = TeamBestand.voeg_rij_toe_in_actief_tabblad()
-                print("Activiteitendata aangepast met : ", NieuweRij)
+                # ConsultantData = ConsultantBestand.lees_data_actieve_tabblad()
+                NieuweRij = ConsultantBestand.voeg_rij_toe_in_actief_tabblad()
+                print("Consultantdata aangepast met : ", NieuweRij)
                 toets = input("Keuze 2 is afgelopen. Druk op Enter")
             elif Keuze == 3: # Verwijder activiteit
                 Foute_keus = 0
-                VerwijderdeRij = TeamBestand.Verwijder_rij_in_actief_tabblad()
-                print("Activiteitendata aangepast door te verwijderen: ", VerwijderdeRij)
-            elif Keuze == 4:  # Pas locatie activiteit aan
+                VerwijderdeRij = ConsultantBestand.Verwijder_rij_in_actief_tabblad()
+                print("Consultantdata aangepast door te verwijderen: ", VerwijderdeRij)
+            elif Keuze == 4:  # Pas uurtarief van consultant aan
                 Foute_keus = 0
-                Gelukt = Pas_locatie_activiteit_aan() # Geeft succes retour
-                print("De locatie is aangepast: ", Gelukt)
-            elif Keuze == 5:  # Pas een veld aan (Pas activiteit aan inclsief kostprijs)"
+                Gelukt = Pas_uurtarief_consultant_aan() # Geeft succes retour
+                print("Het uurtarief is aangepast: ", Gelukt)
+            elif Keuze == 5:  # Sorteer op uurprijs van hoog naar laag"
                 Foute_keus = 0
-                print("Niet geïmplemnteerd mometeel")
-                # Geef Key mee
-            elif Keuze == 6:  # Sorteer op kostprijs van hoog naar laag"
+                Sorteer_uurprijs()
+            elif Keuze == 6:  # Schrijf consultants in HR naar nieuw bestand"
                 Foute_keus = 0
-                Sorteer_kostprijs() # (dict, Key, Reverse (True/False))
-            elif Keuze == 7:  # Schrijf activiteiten met lunch naar nieuw bestand"
-                Foute_keus = 0
-                Schrijf_lunchbestand()
+                Schrijf_HRbestand()
             else:
                 print("Geen opdracht of vraag tot beëindiging")
                 Foute_keus += 1
         print("Programma beëindigd")
 
     # Hiermee eindigen
-    if TeamBestand.file_exists == True:
-        TeamBestand.sluit_Excel()
+    if ConsultantBestand.file_exists == True:
+        ConsultantBestand.sluit_Excel()
 
