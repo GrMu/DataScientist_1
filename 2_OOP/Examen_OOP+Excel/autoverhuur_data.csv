@@ -1,0 +1,31 @@
+id,merk,model,bouwjaar,brandstof,huurprijs
+1,Toyota,Corolla,2020,Benzine,50
+2,Volkswagen,Golf,2019,Diesel,55
+3,Ford,Focus,2021,Hybride,60
+4,BMW,3 Serie,2022,Benzine,80
+5,Audi,A3,2020,Diesel,75
+6,Mercedes,C-Klasse,2021,Benzine,85
+7,Renault,Clio,2018,Benzine,45
+8,Peugeot,208,2020,Diesel,50
+9,Opel,Astra,2019,Hybride,55
+10,Tesla,Model 3,2022,Elektrisch,100
+11,Hyundai,Ioniq,2021,Elektrisch,90
+12,Kia,Niro,2020,Hybride,70
+13,Skoda,Octavia,2019,Diesel,60
+14,Mazda,3,2018,Benzine,50
+15,Honda,Civic,2021,Benzine,65
+16,Volvo,XC40,2020,Hybride,85
+17,Chevrolet,Cruze,2017,Benzine,40
+18,Fiat,500,2020,Benzine,45
+19,Nissan,Leaf,2022,Elektrisch,95
+20,Suzuki,Swift,2018,Benzine,50
+21,Jeep,Renegade,2019,Diesel,70
+22,Land Rover,Defender,2021,Diesel,120
+23,Jaguar,XE,2020,Benzine,90
+24,Mini,Cooper,2019,Benzine,60
+25,Porsche,Cayenne,2022,Hybride,150
+26,Lexus,RX,2021,Hybride,130
+27,Subaru,Impreza,2020,Benzine,65
+28,Mitsubishi,Outlander,2019,Hybride,75
+29,Alfa Romeo,Giulia,2020,Diesel,80
+30,Dacia,Duster,2021,Benzine,55
