@@ -14,6 +14,7 @@ df_piano =  df_muziek[df_muziek["INSTRUMENT"]=="piano"]
 gemiddelde_prijs = df_piano["PRIJS_PER_AVOND"].mean()
 print(f"gemiddelde_prijs piano : {gemiddelde_prijs:.2f}")
 df_piano = df_piano.sort_values(by="PRIJS_PER_AVOND")
+df_piano.rename(columns={"PRIJS_PER_AVOND":"AVONDPRIJS"}, inplace=True)
 print(df_piano.head())
 piano_opgeschoond = df_piano[["ARTIESTENNAAM", "INSTRUMENT", "GENRE"]]
 print(piano_opgeschoond.head())
