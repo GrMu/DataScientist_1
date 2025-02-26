@@ -1,5 +1,6 @@
 import pandas as pd
 df_bier = pd.read_csv("belgische_bieren.csv", sep=';')
+
 print(df_bier.head())
 print(df_bier.columns)
 gem_alc = df_bier["Alcohol_percentage"].mean()
@@ -38,8 +39,8 @@ Bier_statistieken = pd.DataFrame({
     "Max. ABV zwaar bruin br": [df_bruin_zwaar["Alcohol_percentage"].max()]
 })
 # Probeer df_bruin_zwaar te vervangen bij lange uitdrukking op bais van df_bier :
-""""Gem. ABV zwaar bruin bier": [
-    df_bier[(df_bier["Type"] == "Bruin") & (df_bier['Alcohol_percentage'] > 7.0)]["Alcohol_percentage"].mean()],
+ABV = df_bier[(df_bier["Type"] == "Bruin") & (df_bier['Alcohol_percentage'] > 7.0)]["Alcohol_percentage"].mean()
+print(f"Gem. ABV zwaar bruin bier: , {ABV:.1f}")
 """
 pd.set_option("display.expand_frame_repr", True)
 pd.set_option('display.width', 500)
@@ -47,4 +48,4 @@ pd.set_option("display.max_colwidth", 100)
 print(f"Bierstatistieken: {Bier_statistieken}")
 # Waarom kan opmaak niet werken ?? :
 # print(f"Bierstatistieken: {Bier_statistieken:.1f}")
-
+"""
