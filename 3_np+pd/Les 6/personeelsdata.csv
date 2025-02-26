@@ -1,0 +1,24 @@
+id,voornaam,achternaam,functie,startjaar,geslacht,maandloon,afdeling,bedrijfwagen
+1,Frederick,Francken,CEO,2007,Man,5500,Management,ja
+2,Mark,Francken,CTO,2007,Man,5000,Management,ja
+3,Inge,Verjans,CFO,2008,Vrouw,4250,Management,ja
+4,Marleen,Claesen,HR Manager,2009,Vrouw,4000,Hr,ja
+5,Peter,Hermans,Project manager,2010,Man,2800,IT,ja
+6,Pauline,Mertens,Administratief medewerker,2011,Vrouw,1980,Admin,nee
+7,Bart,Mertens,Senior Developer,2012,Man,2400,IT,ja
+8,Karel,Verbeeck,Senior Developer,2014,Man,2350,IT,ja
+9,Marlies,Peeters,Boekhoudster,2014,Vrouw,2100,Admin,nee
+10,Pieter,Francken,Data admin,2015,Man,2250,Admin,nee
+11,Sofie,Francken,HR medewerker,2017,Vrouw,2000,Hr,nee
+12,Lieze,Mertens,Marketing medewerker,2018,Vrouw,2120,Sales,ja
+13,Axel,Peeters,Developer,2019,Man,1900,IT,ja
+14,Lisa,Claes,Developer,2019,Vrouw,1900,IT,ja
+15,Lindsey,Fransen,Onthaal,2019,Vrouw,1700,Admin,nee
+16,Maxim,Jansen,Developer,2020,Man,1850,IT,nee
+17,Sander,Vaes,Webdeveloper,2020,Man,1850,IT,nee
+18,Nick,Peeters,Junior developer,2020,Man,1700,IT,nee
+19,Tine,Francken,Junior developer,2020,Vrouw,1700,it,nee
+20,Jannick,Thijsen,Junior developer,2020,Man,1700,IT,nee
+21,Sanne,Verjans,Junior developer,2021,Vrouw,1600,IT,nee
+22,Jasper,Thijs,Junior developer,2021,Man,1600,it,nee
+23,Linda,Verjans,stagiair,2022,Vrouw,0,Admin,nee
