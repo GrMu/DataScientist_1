@@ -24,4 +24,5 @@ df6=df.copy()
 df6=df6.interpolate(method="linear")
 print(df6)
 
+#
 
