@@ -113,5 +113,4 @@ ax4.set_title('Geslacht Verdeling')
 canvas4 = FigureCanvasTkAgg(fig4, master=frame4)
 canvas4.draw()
 canvas4.get_tk_widget().pack(expand=True, fill='both')
-
 root.mainloop()

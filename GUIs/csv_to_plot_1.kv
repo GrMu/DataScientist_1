@@ -1,0 +1,153 @@
+
+<FloatLayout>:
+    BoxLayout:
+        id: main_layout
+        orientation: 'vertical'
+        size_hint: (1, 1)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        Widget:
+            size_hint_y: 0.1  # Wat lege ruimte bovenaan
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            Spinner:
+                text: 'Option 1'
+                values: ['Option 1', 'Option 2', 'Option 3']
+                size_hint_y: None
+                height: 30
+            Widget:
+                size_hint_x: 0.1
+            Spinner:
+                text: 'Option 2'
+                values: ['Option 1', 'Option 2', 'Option 3']
+                size_hint_y: None
+                height: 30
+            Widget:
+                size_hint_x: 0.1
+            Spinner:
+                text: 'Option 3'
+                values: ['Option 1', 'Option 2', 'Option 3']
+                size_hint_y: None
+                height: 30
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            Spinner:
+                text: 'Option 4'
+                values: ['Option 1', 'Option 2', 'Option 3']
+                size_hint_y: None
+                height: 30
+            Widget:
+                size_hint_x: 0.1
+            Spinner:
+                text: 'Option 5'
+                values: ['Option 1', 'Option 2', 'Option 3']
+                size_hint_y: None
+                height: 30
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            Label:
+                text: 'Label 1'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Label 2'
+                size_hint_y: None
+                height: 30
+
+        Label:
+            text: 'Label 3'
+            size_hint_y: None
+            height: 30
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            Image:
+                source: 'images/tab_image-1.png'
+                size_hint_x: 0.1
+            Button:
+                text: 'Button 1'
+                size_hint_x: 0.6
+                size_hint_y: None
+                height: 30
+            Widget:
+                size_hint_x: 0.2
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            Image:
+                source: 'images/tab_image-2.png'
+                size_hint_x: 0.1
+            Button:
+                text: 'Button 2'
+                size_hint_x: 0.6
+                size_hint_y: None
+                height: 30
+            Widget:
+                size_hint_x: 0.2
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            Image:
+                source: 'images/tab_image-3.png'
+                size_hint_x: 0.1
+            Button:
+                text: 'Button 3'
+                size_hint_x: 0.6
+                size_hint_y: None
+                height: 30
+            Widget:
+                size_hint_x: 0.2
+
+        GridLayout:
+            cols: 3
+            size_hint_y: 0.3
+            Label:
+                text: 'Cell 1'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 2'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 3'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 4'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 5'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 6'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 7'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 8'
+                size_hint_y: None
+                height: 30
+            Label:
+                text: 'Cell 9'
+                size_hint_y: None
+                height: 30
+
+        BoxLayout:
+            id: graph_layout
+            orientation: 'horizontal'
+            size_hint_y: 1

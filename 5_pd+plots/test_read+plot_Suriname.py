@@ -23,7 +23,7 @@ time_format = "%Y-%m-%d %H:%M:%S"
 # time_format = "%d/%m/%Y %H:%M"
 f_window_length = 16
 f_polyorder = 4
-nr_days_to_discern = 7 # For averaging daily data: set to 7 for each weekday, or 1
+nr_days_to_discern = 1 # For averaging daily data: set to 7 for each weekday, or 1
 def printdata(name, data, nr_lines, position):
     nr_lines_corr = min(nr_lines, len(data) - position)
     # print("Lengte data: ", len(data))
