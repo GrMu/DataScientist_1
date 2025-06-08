@@ -3,44 +3,32 @@ This is the main vi of a data aggregation and visualisation project.
 """
 
 # Import
+# Libraries
 import customtkinter as ctk
 import tkinter as tk
 from PIL import Image
 from CTkTable import *
+# Own routines
+# from subroutines.File_handling.Datafile_history_v2 import *
+import  subroutines.File_handling.Datafile_history_v2 as hist
 
-# Paths
+# Image paths
 iconpath = "images/EnergyVille.ico"  # tab_image-glasses.ico"  # vito-logo_blue_text_2.ico"
 data_input_image = "images/VITO_iconen_datagebruik--data_3.png"  # tab_image-glasses.png"
 sql_input_image = "images/sql-server2-5.png"  #fichier-sql.png"  #  serveur-sql.png
 datafile_input_image = "images/csv.png"  # csv.png
 data_selection_image = "images/VITO_iconen_datagebruik--inzicht_3.png"  # tab_image-export.png"
 plots_image = "images/VITO_iconen_datagebruik--kracht_3.png"  # tab_image-graph.png"
-open_folder_image   = "images/dossier(1).png"
+open_folder_image = "images/dossier(1).png"
+file_history_image = "images/dossier.png"
+
+# Other paths
+history_file = 'Resources/Files/datafile_history.txt'
 
 # Settings
-ctk.set_appearance_mode("light")  # Modes: system (default), light, dark
+ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
 
-# Initialize the main window
-root = ctk.CTk()
-root.title('Data aggregation and visualisation')
-root.iconbitmap(iconpath)  # ("images/smiley3.ico")  # ('images/codemy.ico')
-root.geometry("600x600")
-root.minsize(400, 400)
-"""
-# Geïnspireerd uit CustomTKinter_3
-# Echter daar is een canvas over hele scherm gelegd. Die bevat wel canvas.yview, terwijl root.yview niet bestaat.
-# Tevens is daar op de frames .bind scroll_region toegepast
-v_scrollbar = ctk.CTkScrollbar(root, orientation="vertical", command=root.yview)
-v_scrollbar.pack(side="right", fill="y")
-h_scrollbar = ctk.CTkScrollbar(root, orientation="horizontal", command=root.xview)
-h_scrollbar.pack(side="bottom", fill="x")
-"""
-
-# More settings (that can not be defined before initializing the window)
-# Interesting fonts: "Flexo Medium", "Lato", "Biome", Century Gothic", "Miso", "Rockwell Nova"
-title_font = ctk.CTkFont(family="Flexo Medium", size=20,
-	weight="normal", slant="roman", underline=False, overstrike=False) #weight bold/normal, slant=italic/roman
 
 '''
 Event handling functions
@@ -59,6 +47,34 @@ def import_file():
     if file_path:
         # Process the selected file (you can replace this with your own logic)
         print("Selected file:", file_path)
+        # Write the last 30 datafiles in a file
+        hist.add_to_history(history_file, file_path)
+        label_0_1_2.configure(text=f"Filepath: {file_path}")
+
+def file_history():
+    # Read file history, show pop-up and return the selected filepath
+    history = hist.read_history(history_file)
+    file_path = hist.select_history_filepath(history)  # No value is returned, therefore another read action below
+    file_path2 = hist.selected_filepath
+    if file_path:
+        # Process the selected file (you can replace this with your own logic)
+        print("Selected file:", file_path)
+        label_0_1_2.configure(text=f"Filepath: {file_path}")
+
+'''
+Create the GUI
+'''
+# Initialize the main window
+root = ctk.CTk()
+root.title('Data aggregation and visualisation')
+root.iconbitmap(iconpath)  # ("images/smiley3.ico")  # ('images/codemy.ico')
+root.geometry("600x600")
+root.minsize(400, 400)
+
+# More settings (that can not be defined before initializing the window)
+# Interesting fonts: "Flexo Medium", "Lato", "Biome", Century Gothic", "Miso", "Rockwell Nova"
+title_font = ctk.CTkFont(family="Flexo Medium", size=20,
+	weight="normal", slant="roman", underline=False, overstrike=False) #weight bold/normal, slant=italic/roman
 
 # Create three vertical frames (i) and two horizontal ones (j)
 rows, cols = 3,2
@@ -100,9 +116,18 @@ label_0_1.pack(side=tk.TOP, padx=2, pady=2)
 
 # Create an "Import File" button
 open_folder_img = ctk.CTkImage(light_image=Image.open(open_folder_image), dark_image=Image.open(open_folder_image))
-
 file_import_button = ctk.CTkButton(frame_vert[0][1], text="Import File", image=open_folder_img, compound='left', command=import_file)
-file_import_button.pack(pady=10)
+file_import_button.pack(pady=5)
+
+# Create an "File history" button
+open_folder_img = ctk.CTkImage(light_image=Image.open(file_history_image), dark_image=Image.open(file_history_image))
+file_import_button = ctk.CTkButton(frame_vert[0][1], text="File history", image=open_folder_img, compound='left', command=file_history)
+file_import_button.pack(pady=5)
+
+# Create label in second frame with selected filepath
+label_0_1_2 = ctk.CTkLabel(frame_vert[0][1], text=f" Filepath: ")
+label_0_1_2.pack(side=tk.RIGHT, padx=10, pady=2)
+
 
 # Second row
 # Frame-titel
