@@ -1,4 +1,0 @@
-C:/Users/mulderg/Downloads/1_January.csv
-C:/Users/mulderg/Downloads/2_February.csv
-C:/Users/mulderg/Downloads/10_October.csv
-C:/Users/mulderg/Downloads/temperature_data_genk.csv

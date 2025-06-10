@@ -12,6 +12,13 @@ def read_history(history_file):
     with open(history_file, mode='r', newline='', encoding='utf-8') as file:
         file_content = csv.reader(file)
         history = [row for row in file_content]
+        # At example data files at end of history
+        examples = [["appdata/example_data/1_January.csv"],
+                    ["appdata/example_data/10_October"],
+                    ["appdata/example_data/family_solar_economic.csv"],
+                    ["appdata/example_data/S21_profile.csv"],
+                    ["appdata/example_data/All_5_profiles.csv"]]
+        history= history + examples
         print("history :", history)
     return history
 
@@ -133,7 +140,7 @@ def add_to_history(history_file, filepath):
             write.writerows(history)
 
 if __name__ == "__main__":
-    history_file = '../../Resources/Files/datafile_history.txt'
+    history_file = '../../resources/Files/datafile_history.txt'
     folder_iconpath = "../../images/filemap_3b.ico"
     if True:
         filepath = 'C:/Users/mulderg/Downloads/10_October5.csv'

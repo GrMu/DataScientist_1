@@ -2,15 +2,19 @@
 This is the main vi of a data aggregation and visualisation project.
 """
 
-# Import
+'''
+Import
+'''
 # Libraries
 import customtkinter as ctk
 import tkinter as tk
 from PIL import Image
 from CTkTable import *
+import pandas as pd
+
 # Own routines
-# from subroutines.File_handling.Datafile_history_v2 import *
 import  subroutines.File_handling.Datafile_history_v2 as hist
+import subroutines.File_handling.Read_csv_data_file as rd_csv
 
 # Image paths
 iconpath = "images/EnergyVille.ico"  # tab_image-glasses.ico"  # vito-logo_blue_text_2.ico"
@@ -23,11 +27,19 @@ open_folder_image = "images/dossier(1).png"
 file_history_image = "images/dossier.png"
 
 # Other paths
-history_file = 'Resources/Files/datafile_history.txt'
+history_file = 'resources/Files/datafile_history.txt'
 
 # Settings
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
+
+'''
+Functions needed before the event handling functions
+'''
+def get_data_and_show_raw(filepath):
+    data, dialect = rd_csv.read_csv_file_simple(filepath)
+    columns = pd.data.columns
+    print("coluns ", columns)
 
 
 '''
@@ -50,6 +62,7 @@ def import_file():
         # Write the last 30 datafiles in a file
         hist.add_to_history(history_file, file_path)
         label_0_1_2.configure(text=f"Filepath: {file_path}")
+        get_data_and_show_raw(file_path)
 
 def file_history():
     # Read file history, show pop-up and return the selected filepath
@@ -60,6 +73,7 @@ def file_history():
         # Process the selected file (you can replace this with your own logic)
         print("Selected file:", file_path)
         label_0_1_2.configure(text=f"Filepath: {file_path}")
+        get_data_and_show_raw(file_path)
 
 '''
 Create the GUI

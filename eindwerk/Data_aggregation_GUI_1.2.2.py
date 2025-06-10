@@ -13,7 +13,7 @@ plots_image = "images/VITO_iconen_datagebruik--kracht_3.png"
 open_folder_image = "images/dossier(1).png"
 file_history_image = "images/dossier.png"
 
-history_file = 'Resources/Files/datafile_history.txt'
+history_file = 'resources/Files/datafile_history.txt'
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")

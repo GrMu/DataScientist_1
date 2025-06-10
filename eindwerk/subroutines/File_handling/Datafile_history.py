@@ -3,7 +3,7 @@ This tracks the last 30 datafiles that are stored in datafile_history.txt .
 Filtering is added to avoid duplicates.
 """
 
-history_file = '../../Resources/Files/datafile_history.txt'
+history_file = '../../resources/Files/datafile_history.txt'
 max_nr_files = 30
 
 import os
