@@ -51,7 +51,7 @@ def select_history_filepath(history):
             wrapped_item = wrap_text(f"Filepath: {original_filepath}", width//20)
             bottom_label.configure(text=wrapped_item)
             selected_filepath = original_filepath  # Set the global variable
-            poproot.after(1500, lambda: poproot.destroy())
+            poproot.after(500, lambda: poproot.destroy())
 
     def on_enter(event):
         on_doubleclick(event)

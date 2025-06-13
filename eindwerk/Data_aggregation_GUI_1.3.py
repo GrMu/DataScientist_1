@@ -12,6 +12,7 @@ from PIL import Image
 from CTkTable import *
 import pandas as pd
 import os
+import time
 
 # Own routines
 import  subroutines.File_handling.Datafile_history_v2 as hist
@@ -26,6 +27,7 @@ data_selection_image = "images/VITO_iconen_datagebruik--inzicht_3.png"  # tab_im
 plots_image = "images/VITO_iconen_datagebruik--kracht_3.png"  # tab_image-graph.png"
 open_folder_image = "images/dossier(1).png"
 file_history_image = "images/dossier.png"
+read_file_image = "images/csv(1).png"
 
 # Other paths
 history_file = 'resources/Files/datafile_history.txt'
@@ -33,6 +35,7 @@ history_file = 'resources/Files/datafile_history.txt'
 # Settings
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
+sgmntd_bttn_fg_color = "#2CC985"  # fg_color="#3A7EBF")
 
 '''
 Functions needed before the event handling functions
@@ -42,8 +45,27 @@ def get_data_and_show_raw(filepath):
     columns = list(data.columns)
     print("columns ", columns)
     columns = ['no datetime']+ columns
+    combobox_dt['state'] = 'normal'
+    combobox_dt.set(columns[0])  # The visible entry in combobox
     combobox_dt.configure(values=columns)
+    file_import_button.configure(state="normal")
+    # combobox_dt.update_idletasks()
+    combobox_dt['state'] = 'readonly'  # avoids writing by user in combobox
 
+def read_file():
+    pass
+
+def start_read_file(file_path):
+    print("Selected file:", file_path)
+    # Write the last 30 datafiles in a file
+    hist.add_to_history(history_file, file_path)
+    file_ = os.path.basename(file_path)
+    label_0_1_2.configure(text=f"File: {file_}")
+    label_0_1_3.configure(text=f"Reading header: wait", text_color='red')
+    label_0_1_2.update_idletasks()  # Update screen immediately
+    get_data_and_show_raw(file_path)
+    label_0_1_3.configure(text=f" ")
+    # label_0_1_3.update_idletasks()  # Update screen immediately
 
 '''
 Event handling functions
@@ -56,18 +78,15 @@ def button_click(label):
 def callback(value):
     print("segmented button clicked:", value)
 
+# Callback function to handle 'Select file' button click
 def import_file():
     file_path = ctk.filedialog.askopenfilename(title="Select a file",
                                            filetypes=[("Data files", "*.csv"), ("All files", "*.*")])
     if file_path:
         # Process the selected file (you can replace this with your own logic)
-        print("Selected file:", file_path)
-        # Write the last 30 datafiles in a file
-        hist.add_to_history(history_file, file_path)
-        file_ = os.path.basename(file_path)
-        label_0_1_2.configure(text=f"File: {file_}")
-        get_data_and_show_raw(file_path)
+        start_read_file(file_path)
 
+# Callback function to handle 'File history' button click
 def file_history():
     # Read file history, show pop-up and return the selected filepath
     history = hist.read_history(history_file)
@@ -75,10 +94,7 @@ def file_history():
     file_path2 = hist.selected_filepath
     if file_path:
         # Process the selected file (you can replace this with your own logic)
-        print("Selected file:", file_path)
-        file_ = os.path.basename(file_path)
-        label_0_1_2.configure(text=f"File: {file_}")
-        get_data_and_show_raw(file_path)
+        start_read_file(file_path)
 
 '''
 Create the GUI
@@ -112,7 +128,9 @@ for i in range(rows):
 '''
 Add elements to the frames
 '''
-# First row
+'''
+First row
+'''
 # Frame-titel
 data_input_img = Image.open(data_input_image)
 # data_input_img = data_input_img.resize((500, 500), Image.LANCZOS)
@@ -121,48 +139,65 @@ data_input_label.pack(side=tk.TOP, padx=2, pady=2)
 label_0_0 = ctk.CTkLabel(frame_vert[0][0], text=f"Select the data source")
 label_0_0.pack(side=tk.TOP, padx=2, pady=2)
 
-# Data-inputkeuze (frame[0][0]
+# Data-inputkeuze (frame[0][0])
 data_input_choices = ["SQL", "File"]
 sql_input_img = ctk.CTkImage(light_image=Image.open(sql_input_image), dark_image=Image.open(sql_input_image))
 datafile_input_img = ctk.CTkImage(light_image=Image.open(datafile_input_image), dark_image=Image.open(datafile_input_image))
 #sql_input_img = sql_input_img.resize((100, 100), Image.LANCZOS)
 #datafile_input_img = datafile_input_img.resize((100, 100), Image.LANCZOS)
-data_input_segbut = ctk.CTkSegmentedButton(frame_vert[0][0], values=data_input_choices, command=callback, dynamic_resizing=True, fg_color="#2CC985")  # fg_color="#3A7EBF")
+data_input_segbut = ctk.CTkSegmentedButton(frame_vert[0][0], values=data_input_choices, command=callback, dynamic_resizing=True, fg_color=sgmntd_bttn_fg_color)  # fg_color="#3A7EBF")
 data_input_segbut._buttons_dict["SQL"].configure(image=sql_input_img)
 data_input_segbut._buttons_dict["File"].configure(image=datafile_input_img)
+data_input_segbut.configure(state="disabled")
 data_input_segbut.pack( padx=5, pady=5)
 
 # Intro label in second frame
-
+# Assume a grid of 2 small columns and a wide one
 label_0_1 = ctk.CTkLabel(frame_vert[0][1], text=f"Select a data file")
-label_0_1.pack(side=tk.TOP, padx=2, pady=2)
+label_0_1.grid(column=0, row=0, sticky="nw", padx=2, pady=2)
 
 # Create an "Import File" button
 open_folder_img = ctk.CTkImage(light_image=Image.open(open_folder_image), dark_image=Image.open(open_folder_image))
-file_import_button = ctk.CTkButton(frame_vert[0][1], text="Import File", image=open_folder_img, compound='left', command=import_file)
-file_import_button.pack(pady=5)
+file_import_button = ctk.CTkButton(frame_vert[0][1], text="Select file", image=open_folder_img, compound='left', command=import_file)
+file_import_button.grid(column=0, row=1, sticky="nw", padx=2, pady=2)
 
 # Create a "File history" button
 open_folder_img = ctk.CTkImage(light_image=Image.open(file_history_image), dark_image=Image.open(file_history_image))
 file_import_button = ctk.CTkButton(frame_vert[0][1], text="File history", image=open_folder_img, compound='left', command=file_history)
-file_import_button.pack(pady=5)
+file_import_button.grid(column=0, row=2, sticky="nw", padx=2, pady=2)
 
 # Create label in second frame with selected filepath
 label_0_1_2 = ctk.CTkLabel(frame_vert[0][1], text=f" Filepath: (empty)")
-label_0_1_2.pack(side=tk.TOP, padx=10, pady=2)
+label_0_1_2.grid(column=0, row=3, sticky="nw", padx=2, pady=2)
 
-# Combobox to now datetime column
+# Create label in second frame to indicate status (read header, read file)
+label_0_1_3 = ctk.CTkLabel(frame_vert[0][1], text=f" ")  # empty when no action happens
+label_0_1_3.grid(column=0, row=4, sticky="nw", padx=2, pady=2)
+
+# Combobox to know datetime column
 combobox_label_dt = ctk.CTkLabel(frame_vert[0][1], text="Choose datetime column")
-combobox_label_dt.pack(side=tk.TOP, padx=2, pady=0)
+combobox_label_dt.grid(column=1, row=0, sticky="nw", padx=2, pady=2)
+combobox_dt_var = tk.StringVar(frame_vert[0][1], "empty")  # The visible entry in combobox
 combobox_dt = ctk.CTkComboBox(frame_vert[0][1], values=["empty"])
-combobox_dt.pack(side=tk.TOP, padx=2, pady=2)
+combobox_dt['state'] = 'readonly'
+combobox_dt.grid(column=1, row=1, sticky="nw", padx=2, pady=2)
 
-# Combobox for datetime format
-combobox_label_dtfor = ctk.CTkLabel(frame_vert[0][1], text="Select or give datetime format")
-combobox_label_dtfor.pack(side=tk.TOP, padx=2, pady=0)
+# Combobox to know datetime format
+combobox_label_dtfor = ctk.CTkLabel(frame_vert[0][1], text="Select or write datetime format")
+combobox_label_dtfor.grid(column=1, row=2, sticky="nw", padx=2, pady=0)
 combobox_dtfor = ctk.CTkComboBox(frame_vert[0][1], values=["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M"])
-combobox_dtfor.pack(side=tk.TOP, padx=2, pady=2)
-# Second row
+combobox_dtfor.grid(column=1, row=3, sticky="nw", padx=2, pady=0)
+
+# Create a "Read file" button
+read_file_img = ctk.CTkImage(light_image=Image.open(file_history_image), dark_image=Image.open(read_file_image))
+file_import_button = ctk.CTkButton(frame_vert[0][1], text="Read file", image=open_folder_img, compound='left', state= "disabled", command=read_file())
+file_import_button.grid(column=1, row=4, sticky="nw", padx=2, pady=4)
+
+
+
+'''
+Second row
+'''
 # Frame-titel
 data_selection_img = Image.open(data_selection_image)
 # data_input_img = data_input_img.resize((500, 500), Image.LANCZOS)
