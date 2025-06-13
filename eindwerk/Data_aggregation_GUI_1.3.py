@@ -148,7 +148,7 @@ datafile_input_img = ctk.CTkImage(light_image=Image.open(datafile_input_image), 
 data_input_segbut = ctk.CTkSegmentedButton(frame_vert[0][0], values=data_input_choices, command=callback, dynamic_resizing=True, fg_color=sgmntd_bttn_fg_color)  # fg_color="#3A7EBF")
 data_input_segbut._buttons_dict["SQL"].configure(image=sql_input_img)
 data_input_segbut._buttons_dict["File"].configure(image=datafile_input_img)
-data_input_segbut.configure(state="disabled")
+data_input_segbut.configure(state="disabled")  # to be removed later
 data_input_segbut.pack( padx=5, pady=5)
 
 # Intro label in second frame
