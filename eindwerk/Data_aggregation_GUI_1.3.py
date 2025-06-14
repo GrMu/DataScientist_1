@@ -10,8 +10,9 @@ import customtkinter as ctk
 import tkinter as tk
 from PIL import Image
 from CTkTable import *
-import pandas as pd
+
 import os
+import pandas as pd
 import time
 
 # Own routines
@@ -36,14 +37,16 @@ history_file = 'resources/Files/datafile_history.txt'
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
 sgmntd_bttn_fg_color = "#2CC985"  # fg_color="#3A7EBF")
+data_input_choices_list = ["SQL", "File"]
+datetime_format_list = ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M"]
 
 '''
 Functions needed before the event handling functions
 '''
-def get_data_and_show_raw(filepath):
-    data, sample, dialect = rd_csv.read_csv_file_with_method(filepath, 'auto2')
-    columns = list(data.columns)
-    print("columns ", columns)
+
+def get_data_header_and_dialect(filepath):
+    columns, sample, dialect = rd_csv.header_csv_file_with_method(filepath, 'auto2')
+    # print("columns ", columns)
     columns = ['no datetime']+ columns
     combobox_dt['state'] = 'normal'
     combobox_dt.set(columns[0])  # The visible entry in combobox
@@ -51,11 +54,11 @@ def get_data_and_show_raw(filepath):
     file_import_button.configure(state="normal")
     # combobox_dt.update_idletasks()
     combobox_dt['state'] = 'readonly'  # avoids writing by user in combobox
+    sample_textbox.delete("1.0", "end")
+    sample_textbox.insert("1.0", sample)
 
-def read_file():
-    pass
-
-def start_read_file(file_path):
+# A filepath is selected: read header of file and update widgets
+def start_read_header_file(file_path):
     print("Selected file:", file_path)
     # Write the last 30 datafiles in a file
     hist.add_to_history(history_file, file_path)
@@ -63,20 +66,36 @@ def start_read_file(file_path):
     label_0_1_2.configure(text=f"File: {file_}")
     label_0_1_3.configure(text=f"Reading header: wait", text_color='red')
     label_0_1_2.update_idletasks()  # Update screen immediately
-    get_data_and_show_raw(file_path)
+    get_data_header_and_dialect(file_path)
     label_0_1_3.configure(text=f" ")
     # label_0_1_3.update_idletasks()  # Update screen immediately
 
 '''
 Event handling functions
 '''
-# Function to handle button click
+# Callback after Read file button; create status update in label0_1_3
+def read_file(): # file_path, dialect are stored in the module
+    label_0_1_3.configure(text=f"Reading file: wait", text_color='red')
+    label_0_1_3.update_idletasks()  # Update screen immediately
+    datetime_column = combobox_dt.get()
+    print("Selected datetime_column: ", datetime_column)
+    datetime_format = combobox_dtfor.get()
+    print("Selected datetime_format: ", datetime_format)
+    data = rd_csv.read_file(datetime_column, datetime_format)
+    print("Data: ", data)
+    label_0_1_3.configure(text=f"  ")
+
+# Function to handle button click SQL / CSV)
 def button_click(label):
     label.configure(text="Button Clicked!")
 
 # Callback function to handle segmented button clicks
-def callback(value):
+def data_source(value):
     print("segmented button clicked:", value)
+    if value == data_input_choices_list[0] :  # sql
+        pass  # Not implemented to do something yet
+    elif value == data_input_choices_list[1]:  # file
+        pass
 
 # Callback function to handle 'Select file' button click
 def import_file():
@@ -84,7 +103,7 @@ def import_file():
                                            filetypes=[("Data files", "*.csv"), ("All files", "*.*")])
     if file_path:
         # Process the selected file (you can replace this with your own logic)
-        start_read_file(file_path)
+        start_read_header_file(file_path)
 
 # Callback function to handle 'File history' button click
 def file_history():
@@ -94,7 +113,7 @@ def file_history():
     file_path2 = hist.selected_filepath
     if file_path:
         # Process the selected file (you can replace this with your own logic)
-        start_read_file(file_path)
+        start_read_header_file(file_path)
 
 '''
 Create the GUI
@@ -129,23 +148,25 @@ for i in range(rows):
 Add elements to the frames
 '''
 '''
-First row
+1️⃣ First row
 '''
 # Frame-titel
 data_input_img = Image.open(data_input_image)
-# data_input_img = data_input_img.resize((500, 500), Image.LANCZOS)
-data_input_label = ctk.CTkLabel(frame_vert[0][0], text=f" Data input ", image=ctk.CTkImage(data_input_img), compound='left', font=title_font)
+data_input_label = ctk.CTkLabel(frame_vert[0][0], text=f" Data input ", \
+                    image=ctk.CTkImage(data_input_img), compound='left', font=title_font)
 data_input_label.pack(side=tk.TOP, padx=2, pady=2)
 label_0_0 = ctk.CTkLabel(frame_vert[0][0], text=f"Select the data source")
 label_0_0.pack(side=tk.TOP, padx=2, pady=2)
 
 # Data-inputkeuze (frame[0][0])
-data_input_choices = ["SQL", "File"]
+data_input_choices = data_input_choices_list  # ["SQL", "File"]
 sql_input_img = ctk.CTkImage(light_image=Image.open(sql_input_image), dark_image=Image.open(sql_input_image))
-datafile_input_img = ctk.CTkImage(light_image=Image.open(datafile_input_image), dark_image=Image.open(datafile_input_image))
+datafile_input_img = ctk.CTkImage(light_image=Image.open(datafile_input_image), \
+                                  dark_image=Image.open(datafile_input_image))
 #sql_input_img = sql_input_img.resize((100, 100), Image.LANCZOS)
 #datafile_input_img = datafile_input_img.resize((100, 100), Image.LANCZOS)
-data_input_segbut = ctk.CTkSegmentedButton(frame_vert[0][0], values=data_input_choices, command=callback, dynamic_resizing=True, fg_color=sgmntd_bttn_fg_color)  # fg_color="#3A7EBF")
+data_input_segbut = ctk.CTkSegmentedButton(frame_vert[0][0], values=data_input_choices, command=data_source, \
+                        dynamic_resizing=True, fg_color=sgmntd_bttn_fg_color)  # fg_color="#3A7EBF")
 data_input_segbut._buttons_dict["SQL"].configure(image=sql_input_img)
 data_input_segbut._buttons_dict["File"].configure(image=datafile_input_img)
 data_input_segbut.configure(state="disabled")  # to be removed later
@@ -156,14 +177,18 @@ data_input_segbut.pack( padx=5, pady=5)
 label_0_1 = ctk.CTkLabel(frame_vert[0][1], text=f"Select a data file")
 label_0_1.grid(column=0, row=0, sticky="nw", padx=2, pady=2)
 
-# Create an "Import File" button
-open_folder_img = ctk.CTkImage(light_image=Image.open(open_folder_image), dark_image=Image.open(open_folder_image))
-file_import_button = ctk.CTkButton(frame_vert[0][1], text="Select file", image=open_folder_img, compound='left', command=import_file)
+# Create a "Select File" button
+open_folder_img = ctk.CTkImage(light_image=Image.open(open_folder_image), \
+                               dark_image=Image.open(open_folder_image))
+file_import_button = ctk.CTkButton(frame_vert[0][1], text="Select file", image=open_folder_img, \
+                                   compound='left', command=import_file)
 file_import_button.grid(column=0, row=1, sticky="nw", padx=2, pady=2)
 
 # Create a "File history" button
-open_folder_img = ctk.CTkImage(light_image=Image.open(file_history_image), dark_image=Image.open(file_history_image))
-file_import_button = ctk.CTkButton(frame_vert[0][1], text="File history", image=open_folder_img, compound='left', command=file_history)
+open_folder_img = ctk.CTkImage(light_image=Image.open(file_history_image), \
+                               dark_image=Image.open(file_history_image))
+file_import_button = ctk.CTkButton(frame_vert[0][1], text="File history", image=open_folder_img, \
+                                   compound='left', command=file_history)
 file_import_button.grid(column=0, row=2, sticky="nw", padx=2, pady=2)
 
 # Create label in second frame with selected filepath
@@ -185,23 +210,50 @@ combobox_dt.grid(column=1, row=1, sticky="nw", padx=2, pady=2)
 # Combobox to know datetime format
 combobox_label_dtfor = ctk.CTkLabel(frame_vert[0][1], text="Select or write datetime format")
 combobox_label_dtfor.grid(column=1, row=2, sticky="nw", padx=2, pady=0)
-combobox_dtfor = ctk.CTkComboBox(frame_vert[0][1], values=["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M"])
+combobox_dtfor = ctk.CTkComboBox(frame_vert[0][1], values=datetime_format_list)
 combobox_dtfor.grid(column=1, row=3, sticky="nw", padx=2, pady=0)
 
 # Create a "Read file" button
 read_file_img = ctk.CTkImage(light_image=Image.open(file_history_image), dark_image=Image.open(read_file_image))
-file_import_button = ctk.CTkButton(frame_vert[0][1], text="Read file", image=open_folder_img, compound='left', state= "disabled", command=read_file())
+file_import_button = ctk.CTkButton(frame_vert[0][1], text="Read file", image=open_folder_img, compound='left', \
+                                   state= "disabled", command=read_file)
 file_import_button.grid(column=1, row=4, sticky="nw", padx=2, pady=4)
 
+# Create label in second frame at the right to indicate sample data
+label_0_1_smpl = ctk.CTkLabel(frame_vert[0][1], text=f"Sample data fom the file")
+label_0_1_smpl.grid(column=2, row=0, sticky="nw", padx=2, pady=2)
+# Create empty labels in second frame: hope that this makes textbox wider (now there are 3 columns available)
+# but it appears not to have influence on textbox width
+label_0_1_empty1 = ctk.CTkLabel(frame_vert[0][1], text=f" .          .", width=100)
+label_0_1_empty2 = ctk.CTkLabel(frame_vert[0][1], text=f" ..        ..", width=100)
+label_0_1_empty1.grid(column=3, row=0, sticky="n", padx=2, pady=2)
+label_0_1_empty2.grid(column=4, row=0, sticky="n", padx=2, pady=2)
+# label_0_1_empty2.update_idletasks()  # No influence on textbox width
 
+# Create textbox in second frame at the right with sample data and scrollbars
+sample_textbox_frame = ctk.CTkFrame(frame_vert[0][1])
+# sample_textbox_frame = tk.Frame(frame_vert[0][1])
+sample_textbox_frame.grid(column=2, row=1, sticky="nw", columnspan=3, rowspan=4)  #
+sample_textbox_frame.grid_rowconfigure(0, weight=1)
+# sample_textbox_frame.grid_columnconfigure(0, weight=1)
+# Create a Text widget
+sample_textbox = ctk.CTkTextbox(sample_textbox_frame, wrap="none", height=140)  # , state="disabled" means read-only
+sample_textbox.insert("1.1", f"empty")
+sample_textbox.insert("2.2", f"...") # Adding elements appear not to have influence on textbox width
+sample_textbox.insert("3.3", f"...")
+for i in range(3):
+    sample_textbox_frame.grid_columnconfigure(i, weight=1, uniform="foo") # No influence on textbox width
+    sample_textbox_frame.grid_columnconfigure(i, minsize=300)  # Seems a brute method but does not work
+sample_textbox.pack(side=tk.TOP, fill='both', expand=True)
 
 '''
-Second row
+2️⃣ Second row
 '''
 # Frame-titel
 data_selection_img = Image.open(data_selection_image)
 # data_input_img = data_input_img.resize((500, 500), Image.LANCZOS)
-data_selection_label = ctk.CTkLabel(frame_vert[1][0], text=f" Data selection ", image=ctk.CTkImage(data_selection_img), compound='left', font=title_font)
+data_selection_label = ctk.CTkLabel(frame_vert[1][0], text=f" Data selection ", \
+                        image=ctk.CTkImage(data_selection_img), compound='left', font=title_font)
 data_selection_label.pack(side=tk.TOP, padx=2, pady=5)
 
 # Combobox-voorbeeld
@@ -218,12 +270,13 @@ label_1_1.pack(side=tk.TOP, padx=2, pady=2)
 value = [[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5]]
 table = CTkTable(master=frame_vert[1][1], row=5, column=5, values=value)
 table.pack(expand=True, fill="both", padx=5, pady=5)
-
-# Third row
+'''
+3️⃣ Third row
+'''
 # Frame-titel
 plots_img = Image.open(plots_image)
-# data_input_img = data_input_img.resize((500, 500), Image.LANCZOS)
-plots_label = ctk.CTkLabel(frame_vert[2][0], text=f" Plotting ", image=ctk.CTkImage(plots_img), compound='left', font=title_font)
+plots_label = ctk.CTkLabel(frame_vert[2][0], text=f" Plotting ", image=ctk.CTkImage(plots_img), \
+                           compound='left', font=title_font)
 plots_label.pack(side=tk.TOP, padx=2, pady=5)
 
 
