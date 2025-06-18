@@ -8,21 +8,43 @@ import pandas as pd
 import os
 
 # Global variables, to be updated in the functions on header file
-# They are used when reading the file (with correct delimiter)
-sample_ = ""
-dialect_= ""
-file_path_ = ""
+# They are used when reading the file (with correct delimiter) and to store statistics
+header_info={'sample': "", 'dialect': "", 'file_path': "", 'raw columns': []}
+data_info={'orig_rows': 0, 'orig_columns': 0, 'cleaned_rows': 0, 'cleaned_columns': 0, 'datetime_column': 'no datetime', 'datetime_format': "", 'columns': []}
 
-def read_file(datetime_column, datetime_format):
-    data = pd.read_csv(file_path_, sep=dialect_.delimiter, decimal=".")
-    # Convert the date column to datetime format
-    data[datetime_column] = pd.to_datetime(data[datetime_column], format=datetime_format)
+def clean_data_without_datetime(data):
+    # Drop rows where all columns except 'Date' are NaN
+    print("data before cleaning")
+    print(data)
+    print()
+    data = data.dropna(how='all', subset=data.columns.difference(data.index))
+    # printdata("Cleaned DataFrame: ", data, 10, 0)
+    # Fill empty elements with previous data
+    data.ffill(inplace=True)
     return data
 
-def column_names_from_sample(sample, dialect):
-    delim = dialect.delimiter
+def clean_data_with_datetime(data):
+    global data_info
+    # Drop rows where all columns except 'Date' are NaN
+    data = data.dropna(how='all', subset=data.columns.difference([data_info['datetime_column']]))
+    # printdata("Cleaned DataFrame: ", data, 10, 0)
+    # Merge lines with identical datetime:
+    # Group by Date and aggregate the values using 'max' for all columns
+    data = data.groupby(data_info['datetime_column']).max().reset_index()
+    # Fill empty elements with previous data
+    data.ffill(inplace=True)
+    # --- add information about the weekday ---
+    # data['Day'] = data[datetime_column].dt.day_name()
+    data['Day_nr'] = data[data_info['datetime_column']].dt.day_of_week
+    # Set the date column as the index. This only can after the .dt operations
+    data.set_index(data_info['datetime_column'], inplace=True)
+    return data
+
+def column_names_from_sample():
+    global header_info
+    delim = header_info['dialect'].delimiter
     # Split the data into lines
-    lines = sample.split('\n')
+    lines = header_info['sample'].split('\n')
     # Get the first line which contains the column names and strip any trailing whitespace and '\r'
     column_names_line = lines[0].strip()
     # Split the column names line by delimiter ";"
@@ -31,84 +53,120 @@ def column_names_from_sample(sample, dialect):
     return column_names
 
 def header_csv_file_auto_2(csv_file):
+    global header_info
     # find delimiter first with help of dialect that is found by sniffer
     # using clevercsv
     # clevercsv needs copyright statement:
     # CleverCSV is licensed under the MIT license.
     # Please cite our research if you use CleverCSV in your work.
+    header_info['file_path'] = csv_file
     with open(csv_file, newline='') as csvfile:
-        sample = csvfile.read(1024)
-        dialect = clevercsv.Sniffer().sniff(sample)
+        header_info['sample'] = csvfile.read(1024)
+        header_info['dialect'] = clevercsv.Sniffer().sniff(header_info['sample'])
         csvfile.seek(0)
-    columns = column_names_from_sample(sample, dialect)
+    header_info['raw columns'] = column_names_from_sample()
     # data = clevercsv.read_dataframe(sample)
 
     # data = pd.read_csv(csv_file, dialect=dialect)
-    print("sample via clevercsv: ", sample)
+    print("sample via clevercsv: ", header_info['sample'])
 
     # print("data via clevercsv: ", data)
     '''
     Here code should come to detect decimal separator (and maybe thousands separator
     '''
-    globals()['file_path_'] = csv_file
-    globals()['sample_'] = sample
-    globals()['dialect_'] = dialect
-    return columns, sample, dialect
+    return header_info
 
 def header_csv_file_auto_1(csv_file):
     # find delimiter first with help of dialect that is found by sniffer
     # using Python's standard method (= bad unfortunately)
+    global header_info
+    header_info['file_path'] = csv_file
     with open(csv_file, 'r', newline='', encoding='utf-8') as file:
-        sample = file.read(1024)
-        print("sample ", sample)
-        dialect_ = csv.Sniffer().sniff(sample)  # The delimiter list may be omitted , [',', ';', '\t']
+        header_info['sample'] = file.read(1024)
+        print("sample ", header_info['sample'])
+        header_info['dialect'] = csv.Sniffer().sniff(header_info['sample'])  # The delimiter list may be omitted , [',', ';', '\t']
     # Now, use the detected dialect to read the CSV file
     '''
     Here code should come to detect decimal separator (and maybe thousands separator
     '''
-    data = pd.read_csv(sample, dialect=dialect_)
-    columns_ = list(data.columns)
-    globals()['file_path_'] = csv_file
-    globals()['sample_'] = sample
-    globals()['dialect_'] = dialect_
-    return columns_, sample, dialect_
+    data = pd.read_csv(header_info['sample'], dialect=header_info['dialect'])
+    header_info['raw columns'] = list(data.columns)
+    header_info['file_path'] = csv_file
+    header_info['sample'] = sample
+    header_info['dialect'] = dialect_
+    return header_info
 
 def header_csv_file_simple(csv_file):
+    global header_info
+    header_info['file_path'] = csv_file
     data = pd.read_csv(csv_file, sep=";", decimal=".")
     csv.register_dialect('custom', delimiter=';')
-    dialect_ = csv.get_dialect('custom')
-    sample = data[:1024]
-    columns_ = list(data.columns)
-    globals()['file_path_'] = csv_file
-    globals()['sample_'] = sample
-    globals()['dialect_'] = dialect_
-    return columns_, sample, dialect_
+    header_info['dialect'] = csv.get_dialect('custom')
+    header_info['sample'] = data[:1024]
+    header_info['raw columns'] = list(data.columns)
+    header_info['file_path'] = csv_file
+    header_info['sample'] = sample_
+    header_info['dialect'] = dialect_
+    return header_info
+
+"""
+Functions that can be called from outside
+First header_csv_file_with_method should be called to derive header_info
+then read_file can b called to deribe data_info and the data (pandas).  
+"""
 
 def header_csv_file_with_method(csv_file, method):
     assert method in ["simple", "auto1", "auto2"], f"Header_csv_file_with_method has no method: {method}. \n"
     if method == 'simple':
-        columns, sample, dialect_ = header_csv_file_simple(csv_file)
+        header_info = header_csv_file_simple(csv_file)
     elif method == 'auto1':
-        columns, sample, dialect_ = header_csv_file_auto_1(csv_file)
+        header_info = header_csv_file_auto_1(csv_file)
     elif method == 'auto2':
-        columns, sample, dialect_ = header_csv_file_auto_2(csv_file)
+        header_info = header_csv_file_auto_2(csv_file)
     else:
         # Unnecessary since catched by assert statement
         raise(NotImplementedError(f"Read_csv_file_with_method has no method: {method}. \n"))
-    return columns, sample, dialect_
+    return header_info
 
+def read_file(datetime_column, datetime_format):
+    global header_info
+    global data_info
+    data_info['datetime_column'] = datetime_column
+    data_info['datetime_format'] = datetime_format
+    data = pd.read_csv(header_info['file_path'], sep=header_info['dialect'].delimiter, decimal=".")
+    data.columns.name = 'Index'
+    data_info['orig_rows'] = data.shape[0]
+    data_info['orig_columns'] = data.shape[1]
+    if data_info['datetime_column'] != 'no datetime':
+        # Convert the date column to datetime format
+        data[data_info['datetime_column']] = pd.to_datetime(data[data_info['datetime_column']], format=data_info['datetime_format'])
+        data = clean_data_with_datetime(data)
+        data_info['cleaned_rows'] = data.shape[0]
+        data_info['cleaned_columns'] = data.shape[1]
+        print(f"pandas columns: {list(data.columns)} \n")
+        data_info['columns'] = list(data.columns)
+    else:
+        # print('no datetime case')
+        data = clean_data_without_datetime(data)
+        data_info['cleaned_rows'] = data.shape[0]
+        data_info['cleaned_columns'] = data.shape[1]
+        print(f"pandas columns: {list(data.columns)} \n")
+        data_info['columns'] = list(data.columns)  # Index lacks !!!!!!!!!!!!!
+        print("data_info within read function: ", data_info)
+    return data, data_info
 
 if __name__ == "__main__":
     # csv_file = "../../appdata/example_data/S21_profile.csv"
     csv_file = "C:/Users/mulderg/Downloads/1_January--GM--intermediate_1500--export.csv"
     # csv_file = "../../appdata/example_data/imdb.csv"
-    columns_, sample, dialect = header_csv_file_with_method(csv_file, "auto2")  # auto1, simple, auto2
-    # print("dialect : \n", help(dialect))
-    print(f"Delimiter: {dialect.delimiter}")
-    # print(f"Quote char: {dialect.quotechar}")
-    # print(f"Line terminator: {repr(dialect.lineterminator)}")
-
-    print("sample : \n", sample)
+    header_info = header_csv_file_with_method(csv_file, "auto2")  # auto1, simple, auto2
+    # print("dialect : \n", help(data_info['dialect']))
+    print(f"Delimiter: {header_info['dialect'].delimiter}")
+    # print(f"Quote char: {header_info['dialect'].quotechar}")
+    # print(f"Line terminator: {repr(header_info['dialect'].lineterminator)}")
+    print("sample : \n", header_info['sample'])
     print()
-    print("columns: ", columns_)
+    print("(raw) columns: ", header_info['raw_columns'])
 
+    data, data_info = read_file('Date', "%Y-%m-%d %H:%M:%S")  # 'no datetime'
+    print("data_info: ", data_info)

@@ -24,6 +24,7 @@ time_format = "%Y-%m-%d %H:%M:%S"
 f_window_length = 16
 f_polyorder = 4
 nr_days_to_discern = 1 # For averaging daily data: set to 7 for each weekday, or 1
+
 def printdata(name, data, nr_lines, position):
     nr_lines_corr = min(nr_lines, len(data) - position)
     # print("Lengte data: ", len(data))
@@ -79,6 +80,7 @@ time_deltas = data.index.to_series().diff().dropna()
 timestep = time_deltas.mode()[0]
 timestep_seconds = timestep.total_seconds()
 print(f"The timestep is: {timestep} and in seconds: {timestep_seconds}")
+print("type timestep: ", type(timestep))
 
 # Downscale data. This makes the averaging over the days better since the timestamps agree.
 if timestep_seconds < 60:

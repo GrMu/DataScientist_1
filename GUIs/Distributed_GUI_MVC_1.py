@@ -1,0 +1,64 @@
+"""
+This is the main module of a distributed GUI created with MVC approach.
+
+Approach:
+main module contains the controller and the main GUI frames.
+It calls another module that places an interactive frame.
+Once data is generated in that module, it is sent back to the main module with help
+of a callback functionality.
+The data goes to the Model module.
+"""
+
+# Libraries
+import customtkinter as ctk
+import Distributed_GUI.Frame1_MVC_1 as frame1
+import Distributed_GUI.Model1_MVC_1 as model
+
+class MainController:
+    def __init__(self, root):
+        self.root = root
+        self.model = model.DataModel()
+        self.view = MainView(root, self)
+        self.view.setup_ui()
+
+    def receive_data(self, data):
+        self.model.set_data(data)
+        self.view.update_data_label(data)
+
+class MainView:
+    def __init__(self, root, controller):
+        self.root = root
+        self.controller = controller
+
+    def setup_ui(self):
+        self.root.title('Data handling and visualisation')
+        self.root.geometry("1000x600")  # width x height
+        self.root.minsize(400, 400)
+
+        # Create two vertical frames (i) and two horizontal ones (j)
+        rows, cols = 2, 2
+        self.frame_hor = [0 for i in range(rows)]
+        self.frame_vert = [[0 for j in range(cols)] for i in range(rows)]
+
+        for i in range(rows):
+            self.frame_hor[i] = ctk.CTkFrame(self.root, height=20)
+            self.frame_hor[i].pack(side="top", fill="both", expand=True, padx=5, pady=5)
+            for j in range(cols):
+                hulp = self.frame_hor[i]
+                self.frame_vert[i][j] = ctk.CTkFrame(master=hulp, width=(100 if j == 0 else 600))
+                self.frame_vert[i][j].pack(side="left", fill="both", expand=True, padx=5, pady=5)
+
+        # Label to show data
+        self.data_label = ctk.CTkLabel(self.frame_vert[0][0], text=f" Data (empty)")
+        self.data_label.pack(side=ctk.TOP, padx=2, pady=2)
+
+        # Initialize the subframe
+        self.frame1 = frame1.Frame1(self.frame_vert[0][1], self.controller.receive_data)
+
+    def update_data_label(self, data):
+        self.data_label.configure(text=f"data: {data}")
+
+if __name__ == '__main__':
+    root = ctk.CTk()
+    app = MainController(root)
+    root.mainloop()
