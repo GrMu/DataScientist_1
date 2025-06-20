@@ -1,36 +1,20 @@
 """
-This is the main module of a distributed GUI created with MVC approach.
+This is the main module of a distributed GUI based on classes.
 
 Approach:
-main module contains the controller and the main GUI frames.
+main module creates the main GUI frames.
 It calls another module that places an interactive frame.
 Once data is generated in that module, it is sent back to the main module with help
 of a callback functionality.
-The data goes to the Model module.
 """
 
 # Libraries
 import customtkinter as ctk
-import Distributed_GUI.Frame1_MVC_1 as frame1
-import Distributed_GUI.Model1_MVC_1 as model
+import DataScientist_1.GUIs.Distributed_GUI_methods.Distributed_GUI.Frame1_class_based_1 as frame1
 
-class MainController:
+class MainApp:
     def __init__(self, root):
         self.root = root
-        self.model = model.DataModel()
-        self.view = MainView(root, self)
-        self.view.setup_ui()
-
-    def receive_data(self, data):
-        self.model.set_data(data)
-        self.view.update_data_label(data)
-
-class MainView:
-    def __init__(self, root, controller):
-        self.root = root
-        self.controller = controller
-
-    def setup_ui(self):
         self.root.title('Data handling and visualisation')
         self.root.geometry("1000x600")  # width x height
         self.root.minsize(400, 400)
@@ -52,13 +36,16 @@ class MainView:
         self.data_label = ctk.CTkLabel(self.frame_vert[0][0], text=f" Data (empty)")
         self.data_label.pack(side=ctk.TOP, padx=2, pady=2)
 
-        # Initialize the subframe
-        self.frame1 = frame1.Frame1(self.frame_vert[0][1], self.controller.receive_data)
+        # Initialise/ start the subframe and
+        # pass the callback function to the frame
+        self.frame1 = frame1.Frame1(self.frame_vert[0][1], self.receive_data)
 
-    def update_data_label(self, data):
+    # Callback function to handle data that comes out of subframe!
+    def receive_data(self, data):
+        print("data received:", data)
         self.data_label.configure(text=f"data: {data}")
 
 if __name__ == '__main__':
     root = ctk.CTk()
-    app = MainController(root)
+    app = MainApp(root)
     root.mainloop()

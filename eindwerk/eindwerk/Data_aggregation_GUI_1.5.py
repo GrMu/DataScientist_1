@@ -1,5 +1,8 @@
 """
 This is the main module of a data aggregation and visualisation project.
+
+It creates the GUI structure and receives+sends data between the subframes
+Subframes are loaded depending on the user choices.
 """
 '''
 Import
@@ -10,12 +13,13 @@ import tkinter as tk
 import customtkinter as ctk
 from CTkTable import *
 from PIL import Image
+from pandas import Timestamp as pd_timestamp
+import datetime
 
 # Own routines
-# import subroutines.GUI_parts.GUI_file_handling as file_handl
+import subroutines.GUI_parts.GUI_file_handling as file_handl
 
 # Image paths
-iconpath = "images/EnergyVille.ico"  # tab_image-glasses.ico"  # vito-logo_blue_text_2.ico"
 data_input_image = "images/VITO_iconen_datagebruik--data_3.png"  # tab_image-glasses.png"
 sql_input_image = "images/sql-server2-5.png"  #fichier-sql.png"  #  serveur-sql.png
 datafile_input_image = "images/csv.png"  # csv.png
@@ -26,23 +30,49 @@ plots_image = "images/VITO_iconen_datagebruik--kracht_3.png"  # tab_image-graph.
 # --
 
 # Settings
-ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
-ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
-sgmntd_bttn_fg_color = "#2CC985"  # fg_color="#3A7EBF")
+look = "VITO"  # "VITO" or "EnergyVille"
+
+if look == "VITO":
+    ctk.set_appearance_mode("light")  # Modes: system (default), light, dark
+    ctk.set_default_color_theme("dark-blue")  # Themes: blue (default), dark-blue, green
+    sgmntd_bttn_fg_color = "#3A7EBF"  # fg_color="#3A7EBF"), "#2CC985"
+    iconpath = "images/vito-logo_blue_text_2.ico"  # tab_image-glasses.ico"  # vito-logo_blue_text_2.ico"
+else:
+    ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
+    ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
+    sgmntd_bttn_fg_color = "#2CC985"  # fg_color="#3A7EBF")
+    iconpath = "images/EnergyVille.ico"  # tab_image-glasses.ico"  # vito-logo_blue_text_2.ico"
+
 data_input_choices_list = ["SQL", "File"]
 
 '''
 Functions needed before the event handling functions
 '''
 
+def get_now():
+    # Show the moment that is clicked in status label
+    now = datetime.datetime.now()
+    pd_now = pd_timestamp(now)
+    freq = '1s'
+    pd_round = pd_now.round(freq)
+    now_rounded = pd_round.to_pydatetime()
+    return now_rounded
+
+# Callback function to handle data that comes out of subframe!
+def receive_data(data):
+    now_rounded = get_now()
+    print(f"data received: {data} at {now_rounded}")
+    label_1_1.configure(text=f"data received at {now_rounded}")
+
 # Callback function to handle segmented button clicks
+#  It receives (!) also a callback once data is changed within the subframe
 def data_source(value):
     print("segmented button clicked:", value)
     if value == data_input_choices_list[0] :  # sql
         pass  # Not implemented to do something yet
     elif value == data_input_choices_list[1]:  # file
         # breng frame_vert[0][1] als variabele naar GUI_file_handling
-        pass
+        file_handl.Place_frame1(frame_vert[0][1], receive_data)
 
 # Function to handle button : temporary decoration
 def button_click(label):

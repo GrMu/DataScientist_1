@@ -1,6 +1,7 @@
 """
-This file creates the GUI for file handling and calls the file_handling functions
+This is the main module of a data aggregation and visualisation project.
 """
+
 '''
 Import
 '''
@@ -12,22 +13,38 @@ from CTkTable import *
 import numpy as np
 
 import os
+# from os import path
+
 import pandas as pd
 import time
 
 # Own routines
-import  subroutines.File_handling.Datafile_history_v2 as hist
+import subroutines.File_handling.Datafile_history_v2 as hist
 import subroutines.File_handling.Read_csv_data_file as rd_csv
 
+# path constructions
+repo_path, _ = os.path.split(os.path.dirname(os.path.abspath(eindwerk.__file__)))
+images_path = os.path.join(repo_path, "images")
+file_resources_path = os.path.join(repo_path,"resources/Files")
 # Image paths
-open_folder_image = "images/dossier(1).png"
-file_history_image = "images/dossier.png"
-read_file_image = "images/csv(1).png"
+iconpath = os.path.join(images_path, "EnergyVille.ico")  # tab_image-glasses.ico"  # vito-logo_blue_text_2.ico"
+data_input_image = os.path.join(images_path, "VITO_iconen_datagebruik--data_3.png")  # tab_image-glasses.png"
+sql_input_image = os.path.join(images_path, "sql-server2-5.png")  #fichier-sql.png"  #  serveur-sql.png
+datafile_input_image = os.path.join(images_path, "csv.png")  # csv.png
+data_selection_image = os.path.join(images_path, "VITO_iconen_datagebruik--inzicht_3.png")  # tab_image-export.png"
+plots_image = os.path.join(images_path, "VITO_iconen_datagebruik--kracht_3.png")  # tab_image-graph.png"
+open_folder_image = os.path.join(images_path, "dossier(1).png")
+file_history_image = os.path.join(images_path, "dossier.png")
+read_file_image = os.path.join(images_path, "csv(1).png")
 
 # Other paths
-history_file = 'resources/Files/datafile_history.txt'
+history_file = os.path.join(file_resources_path, 'resources/Files/datafile_history.txt')
 
 # Settings
+ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
+ctk.set_default_color_theme("green")  # Themes: blue (default), dark-blue, green
+sgmntd_bttn_fg_color = "#2CC985"  # fg_color="#3A7EBF")
+data_input_choices_list = ["SQL", "File"]
 datetime_format_list = ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M"]
 
 '''
@@ -76,6 +93,12 @@ def start_read_header_file(file_path):
     label_0_1_cleaned.configure(text=f" . ")
     label_0_1_clnd_rows.configure(text=f"..")
     label_0_1_clnd_columns.configure(text=f"..")
+    label_0_1_step.configure(text=f"..")
+
+'''
+Event handling functions
+'''
+# Callback after Read file button; create status update in label0_1_3
 def read_file(): # file_path, dialect are stored in the module
     label_0_1_status.configure(text=f"Reading file: wait", text_color='red')
     label_0_1_status.update_idletasks()  # Update screen immediately
@@ -97,6 +120,22 @@ def read_file(): # file_path, dialect are stored in the module
         label_0_1_step.configure(text=f"--")
     label_0_1_status.configure(text=f"  ")
 
+# Callback function to handle segmented button clicks
+def data_source(value):
+    print("segmented button clicked:", value)
+    if value == data_input_choices_list[0] :  # sql
+        pass  # Not implemented to do something yet
+    elif value == data_input_choices_list[1]:  # file
+        pass
+
+# Callback function to handle 'Select file' button click
+def import_file():
+    file_path = ctk.filedialog.askopenfilename(title="Select a file",
+                                           filetypes=[("Data files", "*.csv"), ("All files", "*.*")])
+    if file_path:
+        # Process the selected file (you can replace this with your own logic)
+        start_read_header_file(file_path)
+
 # Callback function to handle 'File history' button click
 def file_history():
     # Read file history, show pop-up and return the selected filepath
@@ -107,9 +146,38 @@ def file_history():
         # Process the selected file (you can replace this with your own logic)
         start_read_header_file(file_path)
 
+# Function to handle button : temporary decoration
+def button_click(label):
+    label.configure(text="Button Clicked!")
+
 '''
 Create the GUI
 '''
+# Initialize the main window
+root = ctk.CTk()
+root.title('Data aggregation and visualisation')
+root.iconbitmap(iconpath)  # ("images/smiley3.ico")  # ('images/codemy.ico')
+root.geometry("1000x600")  # width x height
+root.minsize(400, 400)
+
+# More settings (that can not be defined before initializing the window)
+# Interesting fonts: "Flexo Medium", "Lato", "Biome", Century Gothic", "Miso", "Rockwell Nova"
+title_font = ctk.CTkFont(family="Flexo Medium", size=20,
+	weight="normal", slant="roman", underline=False, overstrike=False) #weight bold/normal, slant=italic/roman
+
+# Create three vertical frames (i) and two horizontal ones (j)
+rows, cols = 3,2
+# initialise vertical frame-array (1D) and their subframes as 2D matrix
+frame_hor = [0 for i in range(rows)]
+frame_vert = [[0 for j in range(cols)] for i in range(rows)]
+
+for i in range(rows):
+    frame_hor[i] = ctk.CTkFrame(root, height=20)
+    frame_hor[i].pack(side="top", fill="both", expand=True, padx=5, pady=5, )
+    for j in range(cols):
+        hulp = frame_hor[i]
+        frame_vert[i][j] = ctk.CTkFrame(master=hulp, width=(100 if j==0 else 600))
+        frame_vert[i][j].pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
 '''
 Add elements to the frames
@@ -117,6 +185,29 @@ Add elements to the frames
 '''
 1️⃣ First row
 '''
+# First column
+# Frame-titel
+data_input_img = Image.open(data_input_image)
+data_input_label = ctk.CTkLabel(frame_vert[0][0], text=f" Data input ", \
+                    image=ctk.CTkImage(data_input_img), compound='left', font=title_font)
+data_input_label.pack(side=tk.TOP, padx=2, pady=2)
+label_0_0 = ctk.CTkLabel(frame_vert[0][0], text=f"Select the data source")
+label_0_0.pack(side=tk.TOP, padx=2, pady=2)
+
+# Data-inputkeuze (frame[0][0])
+data_input_choices = data_input_choices_list  # ["SQL", "File"]
+sql_input_img = ctk.CTkImage(light_image=Image.open(sql_input_image), dark_image=Image.open(sql_input_image))
+datafile_input_img = ctk.CTkImage(light_image=Image.open(datafile_input_image), \
+                                  dark_image=Image.open(datafile_input_image))
+#sql_input_img = sql_input_img.resize((100, 100), Image.LANCZOS)
+#datafile_input_img = datafile_input_img.resize((100, 100), Image.LANCZOS)
+data_input_segbut = ctk.CTkSegmentedButton(frame_vert[0][0], values=data_input_choices, command=data_source, \
+                        dynamic_resizing=True, fg_color=sgmntd_bttn_fg_color)  # fg_color="#3A7EBF")
+data_input_segbut._buttons_dict["SQL"].configure(image=sql_input_img)
+data_input_segbut._buttons_dict["File"].configure(image=datafile_input_img)
+data_input_segbut.configure(state="disabled")  # to be removed later
+data_input_segbut.pack( padx=5, pady=5)
+
 # Intro label in second frame
 # Assume a grid of 6 columns
 label_0_1 = ctk.CTkLabel(frame_vert[0][1], text=f"Select a data file")
@@ -194,3 +285,49 @@ label_0_1_clnd_columns.grid(column=4, row=4, sticky="nw", padx=2, pady=2)
 label_0_1_step.grid(column=5, row=4, sticky="nw", padx=2, pady=2)
 # label_0_1_empty2.update_idletasks()  # No influence on textbox width
 
+'''
+2️⃣ Second row
+'''
+# Frame-titel
+data_selection_img = Image.open(data_selection_image)
+# data_input_img = data_input_img.resize((500, 500), Image.LANCZOS)
+data_selection_label = ctk.CTkLabel(frame_vert[1][0], text=f" Data selection ", \
+                        image=ctk.CTkImage(data_selection_img), compound='left', font=title_font)
+data_selection_label.pack(side=tk.TOP, padx=2, pady=5)
+
+# Combobox-voorbeeld
+combobox_label1 = ctk.CTkLabel(frame_vert[1][0], text="Combobox 1")
+combobox_label1.pack(side=tk.TOP, padx=2, pady=0)
+combobox1 = ctk.CTkComboBox(frame_vert[1][0], values=["Option 1", "Option 2", "Option 3"])
+combobox1.pack(side=tk.TOP, padx=2, pady=2)
+
+# Arbitrary label in second frame
+label_1_1 = ctk.CTkLabel(frame_vert[1][1], text=f" Lorem ypsilon ")
+label_1_1.pack(side=tk.TOP, padx=2, pady=2)
+
+# Table in second frame
+value = [[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5]]
+table = CTkTable(master=frame_vert[1][1], row=5, column=5, values=value)
+table.pack(expand=True, fill="both", padx=5, pady=5)
+'''
+3️⃣ Third row
+'''
+# Frame-titel
+plots_img = Image.open(plots_image)
+plots_label = ctk.CTkLabel(frame_vert[2][0], text=f" Plotting ", image=ctk.CTkImage(plots_img), \
+                           compound='left', font=title_font)
+plots_label.pack(side=tk.TOP, padx=2, pady=5)
+
+
+# OLD
+label2 = ctk.CTkLabel(frame_vert[2][1], text=f"Label in Frame {frame_hor[2]} {1}")
+label2.pack(side=tk.RIGHT, padx=10, pady=10)
+button = ctk.CTkButton(frame_vert[2][0], text="Click Me", command=lambda l=label2: button_click(l))
+button.pack(padx=10, pady=10)
+
+# Add an entry widget to the first vertical frame of the first horizontal frame
+entry = ctk.CTkEntry(frame_vert[2][0])
+entry.pack(padx=10, pady=10)
+
+# Run the main loop
+root.mainloop()
