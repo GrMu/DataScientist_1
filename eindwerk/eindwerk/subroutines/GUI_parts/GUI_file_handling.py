@@ -7,6 +7,7 @@ Import
 # Libraries
 import customtkinter as ctk
 import tkinter as tk
+from tkinter import messagebox
 from PIL import Image
 from CTkTable import *
 import numpy as np
@@ -34,16 +35,24 @@ datetime_format_list = ["%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M"]
 Functions needed before the event handling functions
 '''
 
-def calculate_avg_timestep(data):
-    # Calculate the difference between consecutive timestamps
-    time_deltas = data.index.to_series().diff().dropna()
-    # Get the most common timestep (mode) in the dataframe
-    timestep = time_deltas.mode()[0]
-    print("timestep: ", timestep, "type: ", type(timestep))
-    #time step_seconds = timestep.total_seconds()  # Does not function anymore: strange
-    # print(f"The timestep is: {timestep} and in seconds: {timestep_seconds}")
-    return timestep
+# Show error to the user
+'''
+This does not work yet: ValueError and other ones are not captured here. 
+'''
+class CustomTk(tk.Tk):
+    def report_callback_exception(self, exc, val, tb):
+        print("Exception caught:", val)   # Debugging print statement
+        messagebox.showerror("Error", message=str(val))
 
+def remove_days_in_timedelta(timedelta_in):
+    # Extract the components
+    # '0 days 00:00:07  -> '00:00:07'
+    components = timedelta_in.components
+    if components.days == 0:
+        timedelta_string = f"{components.hours:02}:{components.minutes:02}:{components.seconds:02}"
+    else:
+        timedelta_string = str(timedelta_in)
+    return timedelta_string
 
 def get_data_header_and_dialect(frame_, filepath):
     # Call header_csv... to receive headerinfo with 'sample', 'dialect', 'file_path', 'raw columns'.
@@ -90,20 +99,22 @@ def read_file(frame_, callback): # file_path, dialect are stored in the module
     datetime_format = frame_.combobox_dtfor.get()
     print("Selected datetime_format: ", datetime_format)
     data, data_info = rd_csv.read_file(datetime_column, datetime_format)
-    print("Data: ", data)
+    # print("Data: ", data)
     frame_.label_0_1_rows.configure(text=f"# rows: {data_info['orig_rows']}")
     frame_.label_0_1_columns.configure(text=f"# columns: {data_info['orig_columns']}")
     frame_.label_0_1_cleaned.configure(text=f"Cleaned data:")
     frame_.label_0_1_clnd_rows.configure(text=f"# rows: {data_info['cleaned_rows']}")
     frame_.label_0_1_clnd_columns.configure(text=f"# columns: {data_info['cleaned_columns']}")
+    # Add info on time period to data_info
     if datetime_column != 'no datetime':
-        timestep = calculate_avg_timestep(data)
-        frame_.label_0_1_step.configure(text=f"avg. step: {timestep}")
+        frame_.label_0_1_step.configure(text=f"avg. step: {remove_days_in_timedelta(data_info['timestep']) }")
+        frame_.label_0_1_stepdev.configure(text=f"std. dev.: {remove_days_in_timedelta(data_info['time_deviation'])}")
+        frame_.label_0_1_stepmax.configure(text=f"max.step: {remove_days_in_timedelta(data_info['time_maxstep'])}")
     else:
         frame_.label_0_1_step.configure(text=f"--")
     frame_.label_0_1_status.configure(text=f"  ")
     # Now the cleaned data is sent back to main GUI !
-    callback(data)
+    callback(data, data_info)
 
 # Callback function to handle 'Select file' button click
 def import_file(frame_, callback):
@@ -116,11 +127,7 @@ def import_file(frame_, callback):
 # Callback function to handle 'File history' button click
 def file_history(frame_, callback):
     # Read file history, show pop-up and return the selected filepath
-    history = hist.read_history(history_file)
-    file_path = hist.select_history_filepath(history)  # No value is returned, therefore another read action below
-    '''
-    file_path2 = hist.selected_filepath
-    '''
+    file_path = hist.select_history_filepath(history_file)  # User selects a file from the history list ond examples
     if file_path:
         # Process the selected file (you can replace this with your own logic)
         start_read_header_file(frame_, file_path, callback)
@@ -136,10 +143,6 @@ def Place_frame1(frame_, callback):
     # Assume a grid of 6 columns
     label_0_1 = ctk.CTkLabel(frame_, text=f"Select a data file")
     label_0_1.grid(column=0, row=0, sticky="nw", padx=2, pady=2)
-    # the last 4 columns must have same width: this to try that textbox get same width
-    # However, this method does not seem to work. For the moment it is kept nevertheless
-    for k in range(4):
-        label_0_1.grid_columnconfigure(k+2, weight=1, uniform="col")  # offset beyond first 2 columns (k+2)
 
     # Create a "Select File" button
     open_folder_img = ctk.CTkImage(light_image=Image.open(open_folder_image), \
@@ -193,8 +196,9 @@ def Place_frame1(frame_, callback):
     frame_.label_0_1_columns.grid(column=4, row=0, sticky="nw", padx=2, pady=2)
 
     # Create textbox at the right with sample data and scrollbars
-    frame_.sample_textbox = ctk.CTkTextbox(frame_, wrap="none", height=100)  # , state="disabled" means read-only , height=140
-    frame_.sample_textbox.grid(column=2, row=1, sticky="nw", columnspan=4, rowspan=3)  #
+    # It appears impossible to get rospan and columnspan correct. Therefore, height and width is used too as get-around
+    frame_.sample_textbox = ctk.CTkTextbox(frame_, wrap="none", height=100, width=450)  # , state="disabled" means read-only , height=140
+    frame_.sample_textbox.grid(column=2, row=1, sticky="nw", columnspan=4, rowspan=3)  # columnspan should be 4, but increased
     # sample_textbox.grid_rowconfigure(0, weight=1)
     # sample_textbox.grid_columnconfigure(0, weight=1)
     # Create a Text widget
@@ -205,14 +209,18 @@ def Place_frame1(frame_, callback):
     frame_.label_0_1_clnd_rows = ctk.CTkLabel(frame_,     text=f" .          .", width=100)
     frame_.label_0_1_clnd_columns = ctk.CTkLabel(frame_,  text=f" ..        ..", width=100)
     frame_.label_0_1_step = ctk.CTkLabel(frame_,     text=f" ...      ...", width=100)
+    frame_.label_0_1_stepdev = ctk.CTkLabel(frame_, text=f" ...      ...", width=100)
+    frame_.label_0_1_stepmax = ctk.CTkLabel(frame_, text=f" ...      ...", width=100)
     frame_.label_0_1_clnd_rows.grid(column=3, row=4, sticky="nw", padx=2, pady=2)
     frame_.label_0_1_clnd_columns.grid(column=4, row=4, sticky="nw", padx=2, pady=2)
-    frame_.label_0_1_step.grid(column=5, row=4, sticky="nw", padx=2, pady=2)
+    frame_.label_0_1_step.grid(column=2, row=5, sticky="nw", padx=0, pady=2)
+    frame_.label_0_1_stepdev.grid(column=3, row=5, sticky="nw", padx=10, pady=2)
+    frame_.label_0_1_stepmax.grid(column=4, row=5, sticky="nw", padx=10, pady=2)
 
 if __name__ == '__main__':
     # In this way GUI_file_handling can run stand-alone for debugging
-    def callback(data):
-        # Nothing is done with the received data
+    def callback(data, data_info):
+        # Nothing is done with the received data and data_info
         pass
 
     # Overwrite paths

@@ -7,10 +7,11 @@ Subframes are loaded depending on the user choices.
 '''
 Import
 '''
-import tkinter as tk
 
 # Libraries
+import tkinter as tk
 import customtkinter as ctk
+from tkinter import messagebox
 from CTkTable import *
 from PIL import Image
 from pandas import Timestamp as pd_timestamp
@@ -18,6 +19,10 @@ import datetime
 
 # Own routines
 import subroutines.GUI_parts.GUI_file_handling as file_handl
+import subroutines.GUI_parts.GUI_plot_1 as plot
+import subroutines.GUI_parts.GUI_aggr_1 as GUI_aggr
+import subroutines.GUI_parts.CustomTabView as CustTabView
+import subroutines.GUI_parts.GUI_file_export as export
 
 # Image paths
 data_input_image = "images/VITO_iconen_datagebruik--data_3.png"  # tab_image-glasses.png"
@@ -25,6 +30,11 @@ sql_input_image = "images/sql-server2-5.png"  #fichier-sql.png"  #  serveur-sql.
 datafile_input_image = "images/csv.png"  # csv.png
 data_selection_image = "images/VITO_iconen_datagebruik--inzicht_3.png"  # tab_image-export.png"
 plots_image = "images/VITO_iconen_datagebruik--kracht_3.png"  # tab_image-graph.png"
+tab_info_image = "images/tab_image-intro.png"
+tab_graph_image = "images/tab_image-graph.png"
+tab_aggr_image = "images/tab_image-input.png"
+tab_export_image = "images/tab_image-export.png"
+tab_help_image = "images/tab_image-help.png"
 
 # Other paths
 # --
@@ -58,11 +68,32 @@ def get_now():
     now_rounded = pd_round.to_pydatetime()
     return now_rounded
 
+# Show error to the user
+'''
+This does not work yet: ValueError and other ones are not captured here. 
+'''
+
+# Show error to the user
+'''
+This does not work yet: ValueError and other ones are not captured here. 
+'''
+class CustomTk(tk.Tk):
+    def report_callback_exception(self, exc, val, tb):
+        print("Exception caught:", val)   # Debugging print statement
+        messagebox.showerror("Error", message=str(val))
+
+
 # Callback function to handle data that comes out of subframe!
-def receive_data(data):
+def receive_data(data, data_info):
+    # Contents in data_info that matters here: 'datetime_column' (can be 'no datetime'), 'datetime_format'
     now_rounded = get_now()
-    print(f"data received: {data} at {now_rounded}")
+    # print(f"Main module: data received: \n{data}\n at {now_rounded}")
+    print(f"Main module: data_info received: \n{data_info}\n at {now_rounded}")
     status_label.configure(text=f"data received at {now_rounded}")
+    plot.Place_frame1(tab_graph, data, data_info)
+    if data_info['datetime_column'] != 'no datetime':
+        GUI_aggr.Place_frame1(tab_aggr, data, data_info)
+    export.Place_frame1(tab_export, data, data_info)
 
 # Callback function to handle segmented button clicks
 #  It receives (!) also a callback once data is changed within the subframe
@@ -102,19 +133,25 @@ cols =2
 frame_vert = [[0 for j in range(cols)] for i in range(rows)]
 for j in range(cols):
     hulp = frame_hor[0]
-    frame_vert[0][j] = ctk.CTkFrame(master=hulp, width=(100 if j==0 else 600))
+    frame_vert[0][j] = ctk.CTkFrame(master=hulp, width=(100 if j==0 else 700))
     frame_vert[0][j].pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
 # Create Tabview in second vertical frame
-tabview = ctk.CTkTabview(master=root, height=1000, width=1400)
+tabview = CustTabView.CustomTabview(master=root, height=1000, width=1400)
 tabview.pack(padx=2, pady=2)
 
-tab_intro = tabview.add("Intro")  # add tab at the end
-tab_graph = tabview.add("Graph")  # add tab at the end
-tab_aggr = tabview.add("Aggregate")  # add tab at the end
-tab_export = tabview.add("Export")  # add tab at the end
-tab_help = tabview.add("Help")  # add tab at the end
-tab_ideas = tabview.add("Ideas")  # add tab at the end
+icon_intro = ctk.CTkImage(Image.open(tab_info_image))
+icon_graph = ctk.CTkImage(Image.open(tab_graph_image))
+icon_aggr = ctk.CTkImage(Image.open(tab_aggr_image))
+icon_export = ctk.CTkImage(Image.open(tab_export_image))
+icon_help = ctk.CTkImage(Image.open(tab_help_image))
+
+tab_intro = tabview.add("Intro", icon_intro)
+tab_graph = tabview.add("Graph", icon_graph)
+tab_aggr = tabview.add("Aggregate", icon_aggr)
+tab_export = tabview.add("Export", icon_export)
+tab_help = tabview.add("Help", icon_help)
+tab_ideas = tabview.add("Ideas")
 tabview.set("Intro")  # set currently visible tab
 
 '''
@@ -159,12 +196,9 @@ status_label.pack(side="left", padx=10)
 '''
 3️⃣ TabView
 '''
-button = ctk.CTkButton(master=tabview.tab("Graph"))
-button.pack(padx=20, pady=20)
-
 greeting = ctk.CTkLabel( master=tab_intro, text="Hello, :-) ",  width=10, height=5)
 greeting.pack()
-greeting2 = ctk.CTkLabel(master=tab_graph, text=" (-: Hello ", width=20)
+greeting2 = ctk.CTkLabel(master=tab_intro, text=" (-: Hello ", width=20)
 greeting2.pack()
 
 # Run the main loop

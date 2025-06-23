@@ -10,13 +10,32 @@ import os
 # Global variables, to be updated in the functions on header file
 # They are used when reading the file (with correct delimiter) and to store statistics
 header_info={'sample': "", 'dialect': "", 'file_path': "", 'raw columns': []}
-data_info={'orig_rows': 0, 'orig_columns': 0, 'cleaned_rows': 0, 'cleaned_columns': 0, 'datetime_column': 'no datetime', 'datetime_format': "", 'columns': []}
+# Note: timestep and time_deviation are calculated in GUI_file_handling since only then
+# datetime can be derived.
+data_info = {'orig_rows': 0, 'orig_columns': 0, 'cleaned_rows': 0, 'cleaned_columns': 0,
+             'datetime_column': 'no datetime', 'datetime_format': "", 'columns': [],
+             'timestep': None, 'time_deviation': None,
+             'data_name': "empty", 'data_path': None }
+
+
+def calculate_avg_timestep(data):
+    # Calculate the difference, deviation and max. between consecutive timestamps
+    time_deltas = data.index.to_series().diff().dropna()
+    # Get the most common timestep (mode) in the dataframe
+    timestep = time_deltas.mode()[0]
+    # print("timestep: ", timestep, "type: ", type(timestep))
+    #time step_seconds = timestep.total_seconds()  # Does not function anymore: strange
+    # print(f"The timestep is: {timestep} and in seconds: {timestep_seconds}")
+    time_deviation = time_deltas.std().round('s ')
+    time_maxstep =  time_deltas.max()
+    return timestep, time_deviation, time_maxstep
+
 
 def clean_data_without_datetime(data):
     # Drop rows where all columns except 'Date' are NaN
-    print("data before cleaning")
-    print(data)
-    print()
+    # print("data before cleaning")
+    # print(data)
+    # print()
     data = data.dropna(how='all', subset=data.columns.difference(data.index))
     # printdata("Cleaned DataFrame: ", data, 10, 0)
     # Fill empty elements with previous data
@@ -37,7 +56,8 @@ def clean_data_with_datetime(data):
     # data['Day'] = data[datetime_column].dt.day_name()
     data['Day_nr'] = data[data_info['datetime_column']].dt.day_of_week
     # Set the date column as the index. This only can after the .dt operations
-    data.set_index(data_info['datetime_column'], inplace=True)
+    data.set_index(data_info['datetime_column'], inplace=True)  # inplace=True: Necessary to calculate avg. timestep
+    # print(f"cleaned data : \n{data} \n ")
     return data
 
 def column_names_from_sample():
@@ -68,7 +88,7 @@ def header_csv_file_auto_2(csv_file):
     # data = clevercsv.read_dataframe(sample)
 
     # data = pd.read_csv(csv_file, dialect=dialect)
-    print("sample via clevercsv: ", header_info['sample'])
+    # print("sample via clevercsv: ", header_info['sample'])
 
     # print("data via clevercsv: ", data)
     '''
@@ -83,7 +103,7 @@ def header_csv_file_auto_1(csv_file):
     header_info['file_path'] = csv_file
     with open(csv_file, 'r', newline='', encoding='utf-8') as file:
         header_info['sample'] = file.read(1024)
-        print("sample ", header_info['sample'])
+        # print("sample ", header_info['sample'])
         header_info['dialect'] = csv.Sniffer().sniff(header_info['sample'])  # The delimiter list may be omitted , [',', ';', '\t']
     # Now, use the detected dialect to read the CSV file
     '''
@@ -137,36 +157,54 @@ def read_file(datetime_column, datetime_format):
     data.columns.name = 'Index'
     data_info['orig_rows'] = data.shape[0]
     data_info['orig_columns'] = data.shape[1]
-    if data_info['datetime_column'] != 'no datetime':
+    # derive filename without extension and path from filepath:
+    file_ = os.path.basename(header_info['file_path'])
+    file_name = os.path.splitext(file_)[0]
+    data_info['data_name'] = file_name
+    data_info['data_path'] = os.path.dirname(header_info['file_path'])
+    if data_info['datetime_column'] != 'no datetime': # So, data has datetime
         # Convert the date column to datetime format
         data[data_info['datetime_column']] = pd.to_datetime(data[data_info['datetime_column']], format=data_info['datetime_format'])
         data = clean_data_with_datetime(data)
+        timestep, deviation, max = calculate_avg_timestep(data)
         data_info['cleaned_rows'] = data.shape[0]
         data_info['cleaned_columns'] = data.shape[1]
-        print(f"pandas columns: {list(data.columns)} \n")
+        # print(f"pandas columns: {list(data.columns)} \n")
         data_info['columns'] = list(data.columns)
+        data_info['timestep'] = timestep
+        data_info['time_deviation'] = deviation
+        data_info['time_maxstep'] = max
     else:
         # print('no datetime case')
         data = clean_data_without_datetime(data)
         data_info['cleaned_rows'] = data.shape[0]
         data_info['cleaned_columns'] = data.shape[1]
-        print(f"pandas columns: {list(data.columns)} \n")
+        # print(f"pandas columns: {list(data.columns)} \n")
         data_info['columns'] = list(data.columns)  # Index lacks !!!!!!!!!!!!!
-        print("data_info within read function: ", data_info)
+        data_info['timestep'] = None
+        data_info['time_deviation'] = None
+        data_info['time_maxstep'] = None
+    print("data_info within read function: ", data_info)
     return data, data_info
 
+
 if __name__ == "__main__":
+    # Possibility to test and debug this module
+
     # csv_file = "../../appdata/example_data/S21_profile.csv"
     csv_file = "C:/Users/mulderg/Downloads/1_January--GM--intermediate_1500--export.csv"
-    # csv_file = "../../appdata/example_data/imdb.csv"
+    # header info is a dictionary of 'sample', 'dialect', 'file_path' and 'raw columns'
+    # Get this information by reading start of the file using a specific method
     header_info = header_csv_file_with_method(csv_file, "auto2")  # auto1, simple, auto2
     # print("dialect : \n", help(data_info['dialect']))
     print(f"Delimiter: {header_info['dialect'].delimiter}")
     # print(f"Quote char: {header_info['dialect'].quotechar}")
     # print(f"Line terminator: {repr(header_info['dialect'].lineterminator)}")
-    print("sample : \n", header_info['sample'])
-    print()
-    print("(raw) columns: ", header_info['raw_columns'])
-
+    # print(f"sample : \n, {header_info['sample']} \n")
+    # print("(raw) columns: ", header_info['raw columns'])
+    # Now read the file and use pandas to store the data
     data, data_info = read_file('Date', "%Y-%m-%d %H:%M:%S")  # 'no datetime'
+    # test: it may be more interesting to avoid datetime as index. This makes plotting more generic afterwards.
+    data.reset_index(inplace=True)
+    # print(f" Resetted data: \n{data}\n")
     print("data_info: ", data_info)

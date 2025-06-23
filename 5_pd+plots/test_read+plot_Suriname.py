@@ -1,4 +1,6 @@
-''' Read measurement data from Suriname and create plots with the average day per week'''
+'''
+Read measurement data from Suriname and create plots with the average day per week
+'''
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
@@ -56,7 +58,9 @@ data[column_name_datetime] = pd.to_datetime(data[column_name_datetime], format=t
 print("Datalengte van origineel: ", data.shape[0], "rows, ", data.shape[1], "columns." )
 # Get start date. This is helpful for later operations when averaging days.
 base_date = data[column_name_datetime][0].date() #Get first datetime
+print("First element base date: ", base_date, type(base_date))
 base_date = pd.to_datetime(base_date) # Ensures that the date starts at 00:00
+print("Corrected base date: ", base_date, type(base_date))
 # Drop rows where all columns except 'Date' are NaN
 data = data.dropna(how='all', subset=data.columns.difference([column_name_datetime]))
 # printdata("Cleaned DataFrame: ", data, 10, 0)
@@ -81,6 +85,10 @@ timestep = time_deltas.mode()[0]
 timestep_seconds = timestep.total_seconds()
 print(f"The timestep is: {timestep} and in seconds: {timestep_seconds}")
 print("type timestep: ", type(timestep))
+time_deviation = time_deltas.std()
+time_deviation_seconds = time_deviation.total_seconds()
+print(f"The deviation in time is: {time_deviation} and in seconds: {time_deviation_seconds}")
+
 
 # Downscale data. This makes the averaging over the days better since the timestamps agree.
 if timestep_seconds < 60:
