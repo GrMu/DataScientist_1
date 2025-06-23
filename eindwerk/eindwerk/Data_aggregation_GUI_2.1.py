@@ -23,6 +23,7 @@ import subroutines.GUI_parts.GUI_plot_1 as plot
 import subroutines.GUI_parts.GUI_aggr_1 as GUI_aggr
 import subroutines.GUI_parts.CustomTabView as CustTabView
 import subroutines.GUI_parts.GUI_file_export as export
+import subroutines.GUI_parts.GUI_info as info
 
 # Image paths
 data_input_image = "images/VITO_iconen_datagebruik--data_3.png"  # tab_image-glasses.png"
@@ -40,7 +41,7 @@ tab_help_image = "images/tab_image-help.png"
 # --
 
 # Settings
-look = "EnergyVille"  # "VITO" or "EnergyVille"
+look = "VITO"  # "VITO" or "EnergyVille"
 
 if look == "VITO":
     ctk.set_appearance_mode("light")  # Modes: system (default), light, dark
@@ -153,7 +154,7 @@ tab_export = tabview.add("Export", icon_export)
 tab_help = tabview.add("Help", icon_help)
 tab_ideas = tabview.add("Ideas")
 tabview.set("Intro")  # set currently visible tab
-
+info.Place_frame1(tab_intro)
 '''
 Add elements to the frames
 '''
@@ -193,13 +194,7 @@ data_selection_label.pack(side=tk.LEFT, padx=2, pady=5)
 # Label about data status
 status_label = ctk.CTkLabel( master=frame_hor[1], text="No data yet ",  width=10, height=5)
 status_label.pack(side="left", padx=10)
-'''
-3️⃣ TabView
-'''
-greeting = ctk.CTkLabel( master=tab_intro, text="Hello, :-) ",  width=10, height=5)
-greeting.pack()
-greeting2 = ctk.CTkLabel(master=tab_intro, text=" (-: Hello ", width=20)
-greeting2.pack()
+
 
 # Run the main loop
 root.mainloop()
