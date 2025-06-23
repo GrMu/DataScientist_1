@@ -40,7 +40,7 @@ tab_help_image = "images/tab_image-help.png"
 # --
 
 # Settings
-look = "VITO"  # "VITO" or "EnergyVille"
+look = "EnergyVille"  # "VITO" or "EnergyVille"
 
 if look == "VITO":
     ctk.set_appearance_mode("light")  # Modes: system (default), light, dark
